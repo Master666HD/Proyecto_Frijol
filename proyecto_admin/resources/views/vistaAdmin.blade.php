@@ -61,7 +61,6 @@
                                     <li><a href="{{route('vistaUsuarios')}}">Agricultores</a></li>
                                     <li><a href="{{route('vistaReportes')}}">Reportes</a></li>
                                     <li><a href="">Alquileres</a></li>
-                                    <li><a href="{{route('ia.chat')}}">Chat IA</a></li>
                                 </ul>
                             </div>
                             <!-- Navbar End -->

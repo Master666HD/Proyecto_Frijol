@@ -1,0 +1,74 @@
+     body {
+          
+            background-image: url('../img/fondo-registro.jpg'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+        .card {
+            background-color: rgba(60, 60, 60, 0.8); 
+            color: white; 
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+        }
+
+        .card-header {
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+
+        .form-control, .form-select { 
+            background-color: rgba(255, 255, 255, 0.1); 
+            color: white; 
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: rgba(255, 255, 255, 0.15); 
+            border-color: #88B04B; 
+            box-shadow: 0 0 0 0.25rem rgba(136, 176, 75, 0.25); 
+            color: white;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7); 
+        }
+     
+        .form-select option {
+            background-color: rgba(60, 60, 60, 0.9);
+            color: white;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50; 
+            border-color: #4CAF50;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049; 
+            border-color: #45a049;
+        }
+
+        .alert-danger {
+            background-color: rgba(220, 53, 69, 0.8);
+            color: white;
+            border-color: rgba(220, 53, 69, 0.9);
+        }
+
+        a {
+            color: #66CC00;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #88B04B;
+            text-decoration: underline;
+        }

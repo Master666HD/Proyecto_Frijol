@@ -13,7 +13,7 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="table-success">
                                     <tr>
-                                        <th scope="col">Id</th>
+                                        <th scope="col">Nro</th>
                                         <th scope="col">Nombres</th>
                                         <th scope="col">Apellidos</th>
                                         <th scope="col">Correo</th>

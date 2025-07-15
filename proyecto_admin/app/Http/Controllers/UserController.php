@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use App\Models\Usuario;
 class UserController extends Controller
 {
     
     public function index()
     {
-        $usuarios = Usuarios::all();
+        $usuarios = Usuario::all();
         return view('vistaUsuarios', compact('usuarios'));
     }
 
@@ -35,7 +35,7 @@ class UserController extends Controller
             'rol' => 'required|string|max:255',
         ]);
 
-        Usuarios::create($validated);
+        Usuario::create($validated);
         return redirect()->route('usuarios.index')->with('success', 'Usuario creado exitosamente.');
     }
 
@@ -53,7 +53,7 @@ class UserController extends Controller
     public function edit(string $id)
     {
         // Obtener el usuario por ID y mostrar el formulario de edición
-        $usuario = Usuarios::findOrFail($id);
+        $usuarios = Usuario::findOrFail($id);
         return view('editUser', compact('usuario'));
     }
 
@@ -70,8 +70,8 @@ class UserController extends Controller
             'rol' => 'required|string|max:255',
         ]);
 
-        $usuario = Usuarios::findOrFail($id);
-        $usuario->update($validated);
+        $usuarios = Usuario::findOrFail($id);
+        $usuarios->update($validated);
         return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado exitosamente.');
     }
 
@@ -81,8 +81,8 @@ class UserController extends Controller
     public function destroy(string $id)
     {
         // Eliminar el usuario por ID
-        $usuario = Usuarios::findOrFail($id);
-        $usuario->delete();
+        $usuarios = Usuario::findOrFail($id);
+        $usuarios->delete();
         return redirect()->route('usuarios.index')->with('success', 'Usuario eliminado exitosamente.');
     }
 }

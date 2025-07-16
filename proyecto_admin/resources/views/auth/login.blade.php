@@ -2,11 +2,9 @@
 <html>
 <head>
     <title>Login</title>
-</head>
-
+<link rel="icon" href="img/core-img/favicon.ico">
 <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
 <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
-<body>
 </head>
 <body>
     <div class="container">
@@ -45,14 +43,11 @@
                                 <button type="submit" class="btn btn-primary btn-lg">Iniciar Sesión</button>
                             </div>
                         </form>
-
-                        <p class="text-center mt-4 mb-0">¿No tienes una cuenta? <a href="{{ url('/register') }}">Regístrate aquí</a></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
  <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
 </body>
 </html>

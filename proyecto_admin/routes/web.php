@@ -5,32 +5,24 @@ use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
-
+use App\Http\Controllers\OperacionPrototipoController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/admin', [AdminController::class, 'index'])->middleware('auth')->name('vistaAdmin');
-Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');
-Route::get('/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
-Route::post('/usuarios', [UserController::class, 'store'])->name('usuarios.store');
-Route::get('/usuarios/{id}/edit', [UserController::class, 'edit'])->name('usuarios.edit');
-Route::put('/usuarios/{id}', [UserController::class, 'update'])->name('usuarios.update');
-Route::delete('/usuarios/{id}', [UserController::class, 'destroy'])->name('usuarios.destroy');
-Route::get('/reportes', [ReporteController::class, 'vistaReportes'])->name('vistaReportes');
-
-
-
+Route::middleware(['auth', 'role:Admin'])->group(function () {
+    Route::resource('usuarios', UserController::class);
+    Route::get('/reportes', [ReporteController::class, 'vistaReportes'])->name('vistaReportes');
+    Route::get('/admin', [AdminController::class, 'index'])->name('vistaAdmin');
+    Route::get('/operacion/crear', [OperacionPrototipoController::class, 'create'])->name('operacion.create');
+    Route::post('/operacion/guardar', [OperacionPrototipoController::class, 'store'])->name('operacion.store');
+});
 
 Route::get('/login', [AuthController::class, 'mostrarLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-
-// Registro
-Route::get('/register', [AuthController::class, 'mostrarRegistro'])->name('register');
-Route::post('/register', [AuthController::class, 'registro']);
 
 
 

@@ -10,8 +10,8 @@ class UserController extends Controller
     public function index()
     {
         $usuarios = Usuario::all();
-  
-    return view('vistaUsuarios', compact('usuarios'));
+
+    return view('usuarios.vistaUsuarios', compact('usuarios'));
     }
 
     /**
@@ -20,7 +20,7 @@ class UserController extends Controller
     public function create()
     {
         // Mostrar el formulario para crear un nuevo usuario
-        return view('createUser');
+        return view('usuarios.crearUsuario');
     }
 
     /**
@@ -32,8 +32,11 @@ class UserController extends Controller
         $validated = $request->validate([
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
-            'correo' => 'required|email|max:255|unique:users',
+            'correo' => 'required|email|max:255|unique:usuarios,correo',
             'rol' => 'required|string|max:255',
+            'telefono' => 'nullable|string|max:20',
+            'usuario' => 'required|string|max:255|unique:usuarios,usuario',
+            'contrasenia' => 'required|string|min:8|confirmed', // Aseg
         ]);
 
         Usuario::create($validated);
@@ -55,7 +58,7 @@ class UserController extends Controller
     {
         // Obtener el usuario por ID y mostrar el formulario de edición
         $usuarios = Usuario::findOrFail($id);
-        return view('editUser', compact('usuario'));
+        return view('usuarios.editarUsuario', compact('usuarios'));
     }
 
     /**
@@ -67,8 +70,11 @@ class UserController extends Controller
         $validated = $request->validate([
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
-            'correo' => 'required|email|max:255|unique:users,correo,' . $id,
+            'correo' => 'required|email|max:255|unique:usuarios,correo,' . $id,
             'rol' => 'required|string|max:255',
+            'telefono' => 'nullable|string|max:20',
+            'usuario' => 'required|string|max:255|unique:usuarios,usuario,' . $id,
+            'contrasenia' => 'nullable|string|min:8|confirmed', //
         ]);
 
         $usuarios = Usuario::findOrFail($id);

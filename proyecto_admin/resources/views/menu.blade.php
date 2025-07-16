@@ -60,7 +60,13 @@
                                     <li><a href="{{route('vistaAdmin')}}">Menu</a></li>
                                     <li><a href="{{route('usuarios.index')}}">Agricultores</a></li>
                                     <li><a href="{{route('vistaReportes')}}">Reportes</a></li>
-                                    <li><a href="">Alquileres</a></li>
+                                    <li><a href="{{route('operacion.create')}}">Alquileres</a></li>
+                                    <li>
+                                        <form action="{{ route('logout') }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            <button type="submit" class="btn btn-link nav-link" style="color:inherit; padding:0; margin-left:10px;">Cerrar sesión</button>
+                                        </form>
+                                    </li>
                                 </ul>
                             </div>
                             <!-- Navbar End -->

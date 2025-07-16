@@ -9,7 +9,7 @@
             <div class="card text-white bg-primary mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Total de semillas procesadas</h5>
-             <p class="card-text display-4">{{ $totalSemillas }}</p> 
+             <p class="card-text text-dark display-4">{{ $total }}</p> 
                 </div>
             </div>
         </div>
@@ -18,7 +18,7 @@
             <div class="card text-white bg-success mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Semillas BUENAS</h5>
-                   <p class="card-text display-4">{{ $semillasBuenas }}</p>
+                   <p class="card-text text-dark display-4">{{ $semillasBuenas }}</p>
                 </div>
             </div>
         </div>
@@ -27,7 +27,7 @@
             <div class="card text-white bg-danger mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Semillas MALAS</h5>
-                     <p class="card-text display-4">{{ $semillasMalas }}</p>
+                     <p class="card-text text-dark display-4">{{ $semillasMalas }}</p>
                 </div>
             </div>
         </div>

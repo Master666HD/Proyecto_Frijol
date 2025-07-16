@@ -52,12 +52,14 @@ class Usuario extends Authenticatable
         return $this->contrasenia;
     }
 
-    // Mutador para encriptar la contraseña automáticamente cuando se asigna
+    
     public function setContraseniaAttribute($value)
     {
-        // Encripta la contraseña solo si no está ya encriptada (o si es un nuevo valor)
-        // Hash::needsRehash($value) podría ser útil para rehashear
         $this->attributes['contrasenia'] = Hash::make($value);
+    }
+
+    public function isAdmin() {
+        return $this->rol === 'Admin';
     }
 
 }

@@ -11,7 +11,7 @@ class AdminController extends Controller
     public function index()
     {
         // Total de semillas
-        $totalSemillas = Semilla::count();
+        $total = Semilla::count();
 
         // Semillas BUENAS y MALAS
         $semillasBuenas = Semilla::where('color', 'Bueno')->count();
@@ -34,7 +34,7 @@ class AdminController extends Controller
 
 
         return view('vistaAdmin', [
-            'totalSemillas' => $totalSemillas,
+            'total' => $total,
             'semillasBuenas' => $semillasBuenas,
             'semillasMalas' => $semillasMalas,
             'ultimasSemillas' => $ultimasSemillas,

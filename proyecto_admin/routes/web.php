@@ -13,10 +13,13 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'role:Admin'])->group(function () {
     Route::resource('usuarios', UserController::class);
-    Route::get('/reportes', [ReporteController::class, 'vistaReportes'])->name('vistaReportes');
+    Route::resource('operacion', OperacionPrototipoController::class);
+    Route::get('/reportes', [ReporteController::class, 'vistaReportes'])->name('vistaReportes');    
     Route::get('/admin', [AdminController::class, 'index'])->name('vistaAdmin');
-    Route::get('/operacion/crear', [OperacionPrototipoController::class, 'create'])->name('operacion.create');
-    Route::post('/operacion/guardar', [OperacionPrototipoController::class, 'store'])->name('operacion.store');
+    Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+    Route::get('/reportes/usuario/pdf', [ReporteController::class, 'reporteUsuario'])->name('reportes.usuario.pdf');
+    Route::get('/reportes/fechas/pdf', [ReporteController::class, 'generarPorFechas'])->name('reportes.fechas.pdf');
+    
 });
 
 Route::get('/login', [AuthController::class, 'mostrarLogin'])->name('login');

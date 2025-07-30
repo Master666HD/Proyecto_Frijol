@@ -12,10 +12,11 @@ class Semilla extends Model
 
     protected $fillable = [
         'color',
-        'forma',
+        'tamano',
         'peso',
         'idUsuario',
         'idPrototipo',
+        'estado',
         'fechaRegistro'
     ];
 

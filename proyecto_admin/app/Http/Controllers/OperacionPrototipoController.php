@@ -1,13 +1,23 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\OperacionPrototipo;
-use App\Models\Usuario;
 use App\Models\Prototipo;
+use App\Models\Usuario;
+use App\Models\DevolucionPrototipo;
+use Illuminate\Support\Facades\DB;
 
 class OperacionPrototipoController extends Controller
 {
+    
+    public function index()
+    {
+        //
+    }
+
+    
     public function create()
     {
         $usuarios = Usuario::all();
@@ -21,21 +31,62 @@ class OperacionPrototipoController extends Controller
             'idUsuario' => 'required|exists:usuarios,id',
             'idPrototipo' => 'required|exists:prototipos,id',
             'tipoOperacion' => 'required|in:VENTA,ALQUILER',
-            'precio' => 'required',
-            'estado' => 'required',
-            'fechaDevolucion' => 'nullable|date'
+            'precio' => 'required|numeric',
+            'estado' => 'required|string',
+            'observaciones' => 'nullable|string',
+            'fechaDevolucion' => $request->tipoOperacion == 'ALQUILER' ? 'required|date' : 'nullable|date',
         ]);
 
-        OperacionPrototipo::create([
-            'idUsuario' => $request->idUsuario,
-            'idPrototipo' => $request->idPrototipo,
-            'tipoOperacion' => $request->tipoOperacion,
-            'precio' => $request->precio,
-            'estado' => $request->estado,
-            'fechaRegistro' => now(),
-            'fechaDevolucion' => $request->fechaDevolucion,
-        ]);
+        DB::beginTransaction();
+        try {
+            $operacion = OperacionPrototipo::create([
+                'idUsuario' => $request->idUsuario,
+                'idPrototipo' => $request->idPrototipo,
+                'tipoOperacion' => $request->tipoOperacion,
+                'precio' => $request->precio,
+                'estado' => $request->estado,
+                'fechaRegistro' => now(),
+                'fechaDevolucion' => $request->tipoOperacion == 'ALQUILER' ? $request->fechaDevolucion : null,
+            ]);
 
-        return redirect()->route('admin')->with('success', 'Operación registrada');
+            if ($request->tipoOperacion == 'ALQUILER') {
+                DevolucionPrototipo::create([
+                    'idOperacion' => $operacion->id,
+                    'fechaDevolucion' => $request->fechaDevolucion,
+                    'observaciones' => $request->observaciones ?? null,
+                ]);
+            }
+            DB::commit();
+            return redirect()->route('operacion.create')->with('success', 'Operación registrada exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('operacion.create')->with('error', 'Error al registrar la operación: ' . $e->getMessage());
+        }
+
+    }
+    public function show(string $id)
+    {
+        
+    }
+
+    public function edit(string $id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        //
     }
 }

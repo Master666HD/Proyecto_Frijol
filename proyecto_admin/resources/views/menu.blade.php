@@ -9,7 +9,7 @@
     <!-- The above 4 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 
     <!-- Title -->
-    <title>Frijol Pairumani</title>
+    <title>EcoFrijol</title>
 
     <!-- Favicon -->
     <link rel="icon" href="img/core-img/favicon.ico">
@@ -59,12 +59,12 @@
                                 <ul>
                                     <li><a href="{{route('vistaAdmin')}}">Menu</a></li>
                                     <li><a href="{{route('usuarios.index')}}">Agricultores</a></li>
-                                    <li><a href="{{route('vistaReportes')}}">Reportes</a></li>
-                                    <li><a href="{{route('operacion.create')}}">Alquileres</a></li>
+                                    <li><a href="{{route('operacion.create')}}">Registrar Operación</a></li> 
+                                    <li><a href="{{route('reportes.index')}}">Reportes</a></li>
                                     <li>
                                         <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                                             @csrf
-                                            <button type="submit" class="btn btn-link nav-link" style="color:inherit; padding:0; margin-left:10px;">Cerrar sesión</button>
+                                            <button type="submit" class="btn btn-transparent" style="font-size: 20px; color: #fff; padding: 0px 0px 5px 40px;">Cerrar sesión</button>
                                         </form>
                                     </li>
                                 </ul>
@@ -101,7 +101,7 @@
                         <div class="col-12">
                             <!-- Post Content -->
                             <div class="hero-slides-content text-center">
-                                <h2>Panel de control de los agricultores</h2>
+                                <h2>PANEL DE CONTROL Y OPERACIONES</h2>
                             </div>
                         </div>
                     </div>
@@ -117,7 +117,7 @@
                         <div class="col-12">
                             <!-- Post Content -->
                             <div class="hero-slides-content text-center">
-                                <h2>Los frijoles son vida y salud</h2>
+                                <h2>LOS FRIJOLES SON VIDA Y SALUD</h2>
                             </div>
                         </div>
                     </div>
@@ -242,9 +242,9 @@
                     <div class="col-12 col-md-6">
                         <div class="copywrite-text">
                             <p>&copy; <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="fa fa-heart-o" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
-<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-</p>
+                        Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="fa fa-heart-o" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
+                    <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                    </p>
                         </div>
                     </div>
                     <!-- Footer Nav -->

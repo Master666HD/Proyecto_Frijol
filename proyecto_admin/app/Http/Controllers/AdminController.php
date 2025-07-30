@@ -14,8 +14,8 @@ class AdminController extends Controller
         $total = Semilla::count();
 
         // Semillas BUENAS y MALAS
-        $semillasBuenas = Semilla::where('color', 'Bueno')->count();
-        $semillasMalas = Semilla::where('color', 'Malo')->count();
+        $semillasBuenas = Semilla::where('estado', 'APTO')->count();
+        $semillasMalas = Semilla::where('estado', 'NO APTO')->count();
 
         // Últimas semillas registradas (5)
         $ultimasSemillas = Semilla::with('usuario')->orderBy('fechaRegistro', 'desc')->get();

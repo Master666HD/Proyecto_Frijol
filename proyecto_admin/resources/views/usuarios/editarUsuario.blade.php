@@ -62,10 +62,6 @@
                             <label for="contrasenia" class="form-label">Contraseña:</label>
                             <input type="password" id="contrasenia" name="contrasenia" class="form-control">
                         </div>
-                        <div class="mb-3">
-                            <label for="contrasenia_confirmation" class="form-label">Confirmar Contraseña:</label>
-                            <input type="password" id="contrasenia_confirmation" name="contrasenia_confirmation" class="form-control">
-                        </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-warning mb-2">Actualizar Usuario</button>
                             <a href="{{ route('usuarios.index') }}" class="btn btn-secondary">Regresar</a>

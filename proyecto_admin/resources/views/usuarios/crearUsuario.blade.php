@@ -29,6 +29,15 @@
             <div class="col-md-6 col-lg-5">
                 <div class="card p-4 rounded">
                     <h2 class="text-center mb-4">Crear Usuario</h2>
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <form action="{{ route('usuarios.store') }}" method="POST">
                         @csrf
                         <div class="mb-3">
@@ -52,7 +61,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="telefono" class="form-label">Teléfono:</label>
-                            <input type="text" id="telefono" name="telefono" class="form-control">
+                            <input type="number" id="telefono" name="telefono" class="form-control" required>
                         </div>
                         <div class="mb-3">
                             <label for="usuario" class="form-label">Usuario:</label>
@@ -61,10 +70,6 @@
                         <div class="mb-3">
                             <label for="contrasenia" class="form-label">Contraseña:</label>
                             <input type="password" id="contrasenia" name="contrasenia" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="contrasenia_confirmation" class="form-label">Confirmar Contraseña:</label>
-                            <input type="password" id="contrasenia_confirmation" name="contrasenia_confirmation" class="form-control" required>
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success mb-2">Crear Usuario</button>

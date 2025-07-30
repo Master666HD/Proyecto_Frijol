@@ -53,8 +53,8 @@
                         <thead>
                             <tr>
                                 <th>Color</th>
-                                <th>Peso</th>
-                                <th>Forma</th>
+                                <th>Peso (gr)</th>
+                                <th>Tamaño</th>
                                 <th>Usuario</th>
                                 <th>Fecha</th>
                             </tr>
@@ -64,7 +64,7 @@
                                 <tr>
                                     <td>{{ $semilla->color }}</td>
                                     <td>{{ $semilla->peso }}</td>
-                                    <td>{{ $semilla->forma }}</td>
+                                    <td>{{ $semilla->tamano }}</td>
                                     <td>{{ $semilla->usuario->nombres }} {{ $semilla->usuario->apellidos }}</td>
                                     <td>{{ $semilla->fechaRegistro }}</td>
                                 </tr>

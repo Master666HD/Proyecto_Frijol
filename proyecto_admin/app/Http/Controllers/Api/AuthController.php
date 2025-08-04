@@ -69,32 +69,25 @@ class AuthController extends Controller
     }
 
     public function login(Request $request)
-    {
-        $request->validate([
-            'usuario' => 'required',
-            'contrasenia' => 'required',
-        ]);
+{
+    $request->validate([
+        'userName' => 'required',    // Recibe en inglés
+        'password' => 'required'     // Recibe en inglés
+    ]);
 
-        $usuario = Usuario  ::where('usuario', $request->usuario)->first();
+    // Operación en español
+    $usuario = Usuario::where('usuario', $request->userName)->first();
 
-        if (!$usuario || !Hash::check($request->contrasenia, $usuario->contrasenia)) {
-            return response()->json(['mensaje' => 'Credenciales inválidas'], 401);
-        }
-
-        if (!$usuario->estado) {
-            return response()->json(['mensaje' => 'Usuario inactivo'], 403);
-        }
-
-       $token = $usuario->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-        'mensaje' => 'Inicio de sesión exitoso',
-        'usuario' => [
-        'id' => $usuario->id,
-        'nombre' => $usuario->nombres,
-        'rol' => $usuario->rol
-        ],
-        'token' => $token
-        ]);
+    if (!$usuario || !Hash::check($request->password, $usuario->contrasenia)) {
+        return response()->json(['message' => 'Invalid credentials'], 401);
     }
+
+    $token = $usuario->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'message' => 'Login successful',
+        'user' => $usuario->toEnglishResponse(), // Respuesta en inglés
+        'token' => $token
+    ]);
+}
 }

@@ -1,6 +1,5 @@
 package com.example.appfrijol.presentation.login
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,44 +9,73 @@ import com.example.appfrijol.data.local.datastore.DataStoreManager
 import com.example.appfrijol.data.remote.models.LoginRequest
 import com.example.appfrijol.data.repository.AuthRepository
 import com.example.appfrijol.domain.model.UserInfo
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class LoginViewModel(private val authRepository: AuthRepository, private val dataStoreManager: DataStoreManager) : ViewModel() {
+@HiltViewModel
+class LoginViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val dataStoreManager: DataStoreManager
+) : ViewModel() {
 
-    private val _usuario = MutableStateFlow<UserInfo?>(null)
-    val usuario: StateFlow<UserInfo?> = _usuario
+    private val _currentUser = MutableStateFlow<UserInfo?>(null)
+    val currentUser: StateFlow<UserInfo?> = _currentUser
 
-    var cargando by mutableStateOf(false)
-    var mensaje by mutableStateOf("")
+    var isLoading by mutableStateOf(false)
+    var message by mutableStateOf("")
 
-    fun guardarUsuario(usuario: UserInfo) {
-        _usuario.value = usuario
+    fun saveUser(user: UserInfo) {
+        _currentUser.value = user
     }
 
-    fun login(usuario: String, contrasenia: String, onSuccess: (UserInfo) -> Unit) {
-        if (usuario.isBlank() || contrasenia.isBlank()) {
-            mensaje = "Usuario y contraseña son obligatorios"
+    fun login(username: String, password: String, onSuccess: (UserInfo) -> Unit) {
+        if (username.isBlank() || password.isBlank()) {
+            message = "Usuario y contraseña requeridos"
             return
         }
 
         viewModelScope.launch {
-            cargando = true
-            mensaje = ""
+            isLoading = true
+            message = ""
 
-            val result = authRepository.login(LoginRequest(usuario, contrasenia))
+            val result = authRepository.login(LoginRequest(username, password))
 
-            if (result.isSuccess) {
-                val loginResponse = result.getOrThrow()
+            result.onSuccess { loginResponse ->
+                // Crear usuario con token
                 val userWithToken = loginResponse.user.copy(token = loginResponse.token)
-                guardarUsuario(userWithToken)
-                dataStoreManager.saveToken(loginResponse.token)
+
+                // ✅ Guardar en DataStore (token + nombre)
+                dataStoreManager.saveSession(
+                    token = loginResponse.token,
+                    userName = loginResponse.user.firstName ?: loginResponse.user.userName ?: "",
+                    userId = loginResponse.user.id.toString() // 🔑 convertir a String
+                )
+
+
+                // Guardar localmente
+                saveUser(userWithToken)
+
+                // Notificar éxito
                 onSuccess(userWithToken)
-            } else {
-                mensaje = result.exceptionOrNull()?.message ?: "Error desconocido"
             }
+
+            result.onFailure { e ->
+                message = e.message ?: "Error desconocido"
+            }
+
+            isLoading = false
+        }
+    }
+
+    fun logout(onLogout: () -> Unit) {
+        viewModelScope.launch {
+            dataStoreManager.clearSession()
+            _currentUser.value = null
+            onLogout()
         }
     }
 }
+

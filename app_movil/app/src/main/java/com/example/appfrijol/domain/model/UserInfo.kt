@@ -7,5 +7,5 @@ data class UserInfo(
     val email: String?,     // Coincide con el backend
     val userName: String?,  // Coincide con el backend
     val role: String,      // Agregado para que coincida con el backend
-    val token: String? = null
+    val token: String
 )

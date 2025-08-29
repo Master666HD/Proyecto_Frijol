@@ -28,4 +28,4 @@ Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
     return response()->json(['mensaje' => 'Sesión cerrada']);
 });
 Route::get('/semillas', [SemillaController::class, 'obtenerPorUsuario']);
-Route::get('/resumen_clasificacion', [ClasificacionController::class, 'getResumenClasificacion']);
+Route::get('/classification/summary', [ClasificacionController::class, 'getResumenClasificacion']);

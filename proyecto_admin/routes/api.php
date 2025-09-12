@@ -22,10 +22,23 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
-    $request->user()->currentAccessToken()->delete();
-    return response()->json(['mensaje' => 'Sesión cerrada']);
+Route::post('/login',    [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout',     [AuthController::class, 'logout']);
+    Route::post('/logout-all', [AuthController::class, 'logoutAll']); // opcional
 });
 Route::get('/semillas', [SemillaController::class, 'obtenerPorUsuario']);
 Route::get('/classification/summary', [ClasificacionController::class, 'getResumenClasificacion']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/last-batch-summary', [SemillaController::class, 'lastBatchSummary']);
+    Route::get('/productivity-metrics', [SemillaController::class, 'productivityMetrics']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/semillas', [SemillaController::class, 'obtenerHistorialLotes']); 
+    Route::get('/semillas/{id}', [SemillaController::class, 'obtenerDetalleLote']); 
+    Route::post('/semillas/comparar', [SemillaController::class, 'compararLotes']); 
+    Route::get('/semillas/exportar/{formato}', [SemillaController::class, 'exportarLote']); 
+});
+

@@ -80,7 +80,7 @@ fun HomeScreen(
                 .background(MaterialTheme.colorScheme.background),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // 👤 Encabezado usuario
+
             item {
                 Card(
                     modifier = Modifier

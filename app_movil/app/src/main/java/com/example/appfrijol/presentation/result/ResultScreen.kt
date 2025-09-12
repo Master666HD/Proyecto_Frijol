@@ -437,11 +437,11 @@ fun GraficasTab(semillasEnLote: List<Semilla>) {
 
     val datosPorPeso: Map<String, Int> = semillasEnLote.groupBy { semilla ->
         when {
-            semilla.peso >= 0.0 && semilla.peso <= 20.0 -> "0-20"  // Rango inclusivo
-            semilla.peso > 20.0 && semilla.peso <= 40.0 -> "21-40" // Ajusta los límites como necesites
-            semilla.peso > 40.0 && semilla.peso <= 60.0 -> "41-60"
-            semilla.peso > 60.0 && semilla.peso <= 80.0 -> "61-80"
-            semilla.peso > 80.0 && semilla.peso <= 100.0 -> "81-100" // Asumiendo un límite superior
+            semilla.peso >= 0.0 && semilla.peso <= 20.0 -> "0g-20g"  // Rango inclusivo
+            semilla.peso > 20.0 && semilla.peso <= 40.0 -> "21g-40g " // Ajusta los límites como necesites
+            semilla.peso > 40.0 && semilla.peso <= 60.0 -> "41g-60g"
+            semilla.peso > 60.0 && semilla.peso <= 80.0 -> "61g-80g"
+            semilla.peso > 80.0 && semilla.peso <= 100.0 -> "81g-100g" // Asumiendo un límite superior
             else -> {
                 // Decidir qué hacer con pesos fuera de los rangos esperados
                 // Podría ser "Otros", o si esperas que todos caigan en 0-100:
@@ -621,14 +621,8 @@ fun GraficoBarras(datos: Map<String, Int>, modifier: Modifier = Modifier) {
             val x = index * (barWidth + spacing) + spacing
             val y = size.height - barHeight
 
-            val barColor = when (key.trim().lowercase()) {
-                "bueno" -> Color(0xFF4CAF50)
-                "malo"  -> Color(0xFFF44336)
-                else    -> Color.Gray
-            }
-
             drawRoundRect(
-                color = barColor,
+                color = colors.getOrElse(index % colors.size) { Color.Gray },
                 topLeft = Offset(x, y),
                 size = Size(barWidth, barHeight),
                 cornerRadius = CornerRadius(4.dp.toPx())

@@ -4,13 +4,13 @@ import android.content.Context
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.appfrijol.data.local.datastore.DataStoreManager
 import com.example.appfrijol.data.remote.api.ApiService
+import com.example.appfrijol.data.repository.AuthInterceptor
 import com.example.appfrijol.data.repository.AuthRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -36,11 +36,19 @@ object AppModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(
-        loggingInterceptor: HttpLoggingInterceptor
+        loggingInterceptor: HttpLoggingInterceptor,
+        authInterceptor: AuthInterceptor
     ): OkHttpClient =
         OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
+            .addInterceptor(authInterceptor)
             .build()
+
+    @Provides
+    @Singleton
+    fun provideAuthInterceptor(dataStoreManager: DataStoreManager): AuthInterceptor =
+        AuthInterceptor(dataStoreManager)
+
 
     @Provides
     @Singleton

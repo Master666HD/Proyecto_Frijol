@@ -16,7 +16,7 @@ lifecycle = "2.7.0"  # Nueva versión para componentes de Lifecycle
 viewmodelCompose = "2.7.0"  # Versión específica para viewmodel-compose
 hilt = "2.51.1"
 accompanist = "0.32.0"
-charts = "2.0.0"
+
 
 
 [libraries]
@@ -46,7 +46,6 @@ hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version = "1.2.0" }
 accompanist-systemuicontroller = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "accompanist" }
-charts-android = { module = "io.github.dautovicharis:charts-android", version.ref = "charts" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

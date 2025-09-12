@@ -10,6 +10,11 @@ android {
     namespace = "com.example.appfrijol"
     compileSdk = 36
 
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.15"
+    }
+
     defaultConfig {
         applicationId = "com.example.appfrijol"
         minSdk = 29
@@ -43,7 +48,7 @@ android {
 
 dependencies {
 
-    implementation(libs.charts.android)
+    
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)

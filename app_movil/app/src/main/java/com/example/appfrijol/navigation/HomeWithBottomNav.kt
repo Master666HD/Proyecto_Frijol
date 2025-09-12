@@ -2,7 +2,6 @@ package com.example.appfrijol.navigation
 
 
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -28,8 +27,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.appfrijol.presentation.home.ClassificationViewModel
 import com.example.appfrijol.presentation.home.HomeScreen
+import com.example.appfrijol.presentation.home.HomeViewModel
 import com.example.appfrijol.presentation.learning.LearningScreen
 import com.example.appfrijol.presentation.more.MoreScreen
 import com.example.appfrijol.presentation.profile.ProfileScreen
@@ -52,6 +51,9 @@ fun HomeWithBottomNav(
 
 
     Scaffold(
+        topBar = {
+            MyAppTopAppBar()
+        },
         bottomBar = {
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.surface,
@@ -120,24 +122,16 @@ fun HomeWithBottomNav(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(BottomNavItem.Home.route) {
+                val homeViewModel: HomeViewModel = hiltViewModel()
                 val sessionViewModel: SessionViewModel = hiltViewModel()
-                val classificationViewModel: ClassificationViewModel = hiltViewModel()
 
-                val userId by sessionViewModel.userId.collectAsState(initial = "")
                 val userName by sessionViewModel.userName.collectAsState(initial = "Usuario")
 
-                if (userId.isNotEmpty()) {
-                    Log.d("HomeScreenSetup", "userId = $userId, userName = $userName")
-                    HomeScreen(
-                        viewModel = classificationViewModel,
-                        userId = userId,
-                        userName = userName
-                    )
-                } else {
-                    Log.d("HomeScreenSetup", "No hay userId disponible todavía")
-                }
+                HomeScreen(
+                    viewModel = homeViewModel,
+                    userName = userName
+                )
             }
-
 
 
 

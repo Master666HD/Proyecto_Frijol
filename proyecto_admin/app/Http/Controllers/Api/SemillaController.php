@@ -25,49 +25,50 @@ public function lastBatchSummary()
     $idUser = auth()->user()->id;
 
     // Obtener todas las semillas del usuario ordenadas ascendente
-    $semillas = Semilla::where('idUsuario', $idUser)
+    $seeds = Semilla::where('idUsuario', $idUser)
         ->orderBy('fechaRegistro', 'asc')
         ->get();
 
-    if ($semillas->isEmpty()) {
+    if ($seeds->isEmpty()) {
         return response()->json(['message' => 'No data found'], 404);
     }
 
-    $lotes = [];
-    $loteActual = [];
-    $ultimoTiempo = null;
-    $minutosSeparacion = 20; // Diferencia mínima entre lotes en minutos
+    $batches = [];
+    $currentBatch = [];
+    $lastTime = null;
+    $minutesGap = 10; // Diferencia mínima entre lotes en minutos
 
-    foreach ($semillas as $semilla) {
-        $fecha = Carbon::parse($semilla->fechaRegistro)->setTimezone('America/La_Paz');
-        $diferencia = $ultimoTiempo ? $fecha->diffInMinutes($ultimoTiempo, true) : 0;
+    foreach ($seeds as $seed) {
+        $date = Carbon::parse($seed->fechaRegistro)->setTimezone('America/La_Paz');
+        $diff = $lastTime ? $date->diffInMinutes($lastTime, true) : 0;
 
-        if ($ultimoTiempo && $diferencia > $minutosSeparacion) {
+        if ($lastTime && $diff > $minutesGap) {
             // Guardar lote anterior
-            $lotes[] = $loteActual;
-            $loteActual = [];
+            $batches[] = $currentBatch;
+            $currentBatch = [];
         }
 
-        $loteActual[] = $semilla;
-        $ultimoTiempo = $fecha;
+        $currentBatch[] = $seed;
+        $lastTime = $date;
     }
 
-    if (!empty($loteActual)) {
-        $lotes[] = $loteActual;
+    if (!empty($currentBatch)) {
+        $batches[] = $currentBatch;
     }
 
-    // Tomamos el último lote
-    $lastBatch = end($lotes);
-
-    $date = Carbon::parse($lastBatch[0]->fechaRegistro)->toDateString();
+    // Tomar solo el último lote
+    $lastBatch = end($batches);
 
     return response()->json([
         'by_color' => collect($lastBatch)->groupBy('color')->map->count(),
         'by_size' => collect($lastBatch)->groupBy('tamano')->map->count(),
         'by_weight' => collect($lastBatch)->groupBy('peso')->map->count(),
-        'date' => $date
+        'by_status' => collect($lastBatch)->groupBy('estado')->map->count(),
+        'date' => Carbon::parse($lastBatch[0]->fechaRegistro)->toDateString(),
+        
     ]);
 }
+
 
 
 public function productivityMetrics()
@@ -98,121 +99,167 @@ public function productivityMetrics()
 
 
 
-public function obtenerHistorialLotes(Request $request)
-    {
-        // Traer todas las semillas del usuario ordenadas por fecha ascendente
-        $semillas = Semilla::where('idUsuario', $request->user()->id)
-            ->orderBy('fechaRegistro', 'asc')
-            ->get();
-
-        $lotes = [];
-        $loteActual = [];
-        $ultimoTiempo = null;
-        $minutosSeparacion = 10; // <- si la diferencia es mayor, se crea un nuevo lote
-
-        foreach ($semillas as $semilla) {
-            $fecha = Carbon::parse($semilla->fechaRegistro);
-
-            if ($ultimoTiempo) {
-               $diferencia = $fecha->diffInMinutes($ultimoTiempo, true);
-                Log::info("Procesando semilla ID {$semilla->id} en {$fecha}, diferencia con anterior: {$diferencia} min");
-
-                if ($diferencia > $minutosSeparacion) {
-                    // Guardamos el lote actual
-                    Log::info("Nueva separación detectada: creando nuevo lote con " . count($loteActual) . " semillas");
-                    $lotes[] = [
-                        'inicio' => $loteActual[0]->fechaRegistro,
-                        'fin' => end($loteActual)->fechaRegistro,
-                        'semillas' => $loteActual,
-                        'total' => count($loteActual),
-                    ];
-                    $loteActual = [];
-                }
-            } else {
-                Log::info("Procesando primera semilla ID {$semilla->id} en {$fecha}");
-            }
-
-            $loteActual[] = $semilla;
-            $ultimoTiempo = $fecha;
-        }
-
-        // Guardar último lote si hay semillas
-        if (!empty($loteActual)) {
-            Log::info("Guardando último lote con " . count($loteActual) . " semillas, inicio: {$loteActual[0]->fechaRegistro}, fin: " . end($loteActual)->fechaRegistro);
-            $lotes[] = [
-                'inicio' => $loteActual[0]->fechaRegistro,
-                'fin' => end($loteActual)->fechaRegistro,
-                'semillas' => $loteActual,
-                'total' => count($loteActual),
-            ];
-        }
-
-        return response()->json($lotes, 200);
-    }
-
-    // ✅ Obtener detalle de un lote específico
-    public function obtenerDetalleLote($id, Request $request)
-    {
-        $lote = Semilla::where('idUsuario', $request->user()->id)
-            ->where('id', $id)
-            ->firstOrFail();
-
-        return response()->json($lote, 200);
-    }
-
-    // ✅ Comparar múltiples lotes seleccionados
-    public function compararLotes(Request $request)
-    {
-        $request->validate([
-            'ids' => 'required|array|min:2',
-            'ids.*' => 'integer|exists:semillas,id',
-        ]);
-
-        $lotes = Semilla::whereIn('id', $request->ids)
-            ->where('idUsuario', $request->user()->id)
-            ->get();
-
-        return response()->json($lotes, 200);
-    }
-
-    // ✅ Exportar lote en CSV o PDF
-   public function exportarLote(Request $request, $formato)
+public function getBatchHistory(Request $request)
 {
-    $inicio = $request->query('inicio');
-    $fin = $request->query('fin');
+    $userId = $request->user()->id;
 
-    if (!$inicio || !$fin) {
-        return response()->json(['error' => 'Faltan parámetros inicio o fin'], 400);
-    }
-
-    // Traer todas las semillas del usuario dentro del rango
-    $lote = Semilla::where('idUsuario', $request->user()->id)
-        ->whereBetween('fechaRegistro', [$inicio, $fin])
+    $seeds = Semilla::where('idUsuario', $userId)
+        ->orderBy('fechaRegistro', 'asc')
         ->get();
 
-    if ($lote->isEmpty()) {
-        return response()->json(['error' => 'No se encontraron semillas en este rango'], 404);
+    $batches = [];
+    $currentBatch = [];
+    $lastTime = null;
+    $minutesGap = 10;
+
+    foreach ($seeds as $seed) {
+        $date = Carbon::parse($seed->fechaRegistro);
+
+        $diff = $lastTime ? $date->diffInMinutes($lastTime, true) : 0;
+
+        if ($lastTime && $diff > $minutesGap) {
+            // Save previous batch
+            $batches[] = [
+                'start' => $currentBatch[0]->fechaRegistro,
+                'end' => end($currentBatch)->fechaRegistro,
+                'seeds' => $currentBatch,
+                'total' => count($currentBatch),
+            ];
+            $currentBatch = [];
+        }
+
+        $currentBatch[] = $seed;
+        $lastTime = $date;
     }
 
-    // --- CSV ---
-    if ($formato === 'csv') {
-        $csv = "Color,Tamaño,Peso,Estado,Fecha Registro\n";
-        foreach ($lote as $semilla) {
-            $csv .= "{$semilla->color},{$semilla->tamano},{$semilla->peso},{$semilla->estado},{$semilla->fechaRegistro}\n";
+    if (!empty($currentBatch)) {
+        $batches[] = [
+            'start' => $currentBatch[0]->fechaRegistro,
+            'end' => end($currentBatch)->fechaRegistro,
+            'seeds' => $currentBatch,
+            'total' => count($currentBatch),
+        ];
+    }
+
+    // Map output to English keys
+    $batches = array_map(function ($batch) {
+        return [
+            'start' => $batch['start'],
+            'end' => $batch['end'],
+            'total' => $batch['total'],
+            'seeds' => array_map(function ($seed) {
+                return [
+                    'id' => $seed->id,
+                    'color' => $seed->color,
+                    'size' => $seed->tamano,
+                    'weight' => $seed->peso,
+                    'status' => $seed->estado,
+                    'registration_date' => $seed->fechaRegistro
+                ];
+            }, $batch['seeds'])
+        ];
+    }, $batches);
+
+    return response()->json($batches, 200);
+}
+
+// Similar changes para obtenerDetalleLote y compararLotes
+public function getBatchDetail($id, Request $request)
+{
+    $seed = Semilla::where('idUsuario', $request->user()->id)
+        ->where('id', $id)
+        ->firstOrFail();
+
+    // Map to English keys
+    return response()->json([
+        'id' => $seed->id,
+        'color' => $seed->color,
+        'size' => $seed->tamano,
+        'weight' => $seed->peso,
+        'status' => $seed->estado,
+        'registration_date' => $seed->fechaRegistro
+    ], 200);
+}
+
+public function compareBatches(Request $request)
+{
+    $request->validate([
+        'ids' => 'required|array|min:2',
+        'ids.*' => 'integer|exists:semillas,id'
+    ]);
+
+    $seeds = Semilla::whereIn('id', $request->ids)
+        ->where('idUsuario', $request->user()->id)
+        ->get();
+
+    // Map to English
+    $seeds = $seeds->map(function ($seed) {
+        return [
+            'id' => $seed->id,
+            'color' => $seed->color,
+            'size' => $seed->tamano,
+            'weight' => $seed->peso,
+            'status' => $seed->estado,
+            'registration_date' => $seed->fechaRegistro
+        ];
+    });
+
+    return response()->json($seeds, 200);
+}
+public function exportBatch(Request $request, $format)
+{
+    $start = $request->query('start');
+    $end = $request->query('end');
+
+    if (!$start || !$end) {
+        return response()->json(['error' => 'Missing start or end parameters'], 400);
+    }
+
+    // Get all seeds of the user in the given range
+    $batch = Semilla::where('idUsuario', $request->user()->id)
+        ->whereBetween('fechaRegistro', [$start, $end])
+        ->get();
+
+    if ($batch->isEmpty()) {
+        return response()->json(['error' => 'No seeds found in this range'], 404);
+    }
+
+    // --- CSV export ---
+    if ($format === 'csv') {
+        $csv = "Color,Size,Weight,Status,Registration Date\n";
+        foreach ($batch as $seed) {
+            $csv .= "{$seed->color},{$seed->tamano},{$seed->peso},{$seed->estado},{$seed->fechaRegistro}\n";
         }
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=lote_{$inicio}_{$fin}.csv",
+            'Content-Disposition' => "attachment; filename=\"batch_{$start}_{$end}.csv\"",
         ]);
     }
 
-    // --- PDF ---
-    if ($formato === 'pdf') {
-        $pdf = Pdf::loadView('exports.lote', ['lote' => $lote]);
-        return $pdf->download("lote_{$inicio}_{$fin}.pdf");
+    // --- PDF export ---
+    if ($format === 'pdf') {
+        // Map seeds to English keys
+        $batchMapped = $batch->map(function($seed) {
+            return [
+                'color' => $seed->color,
+                'size' => $seed->tamano,
+                'weight' => $seed->peso,
+                'status' => $seed->estado,
+                'registration_date' => $seed->fechaRegistro
+            ];
+        });
+
+        // Ensure the view exists and pass the mapped data
+        if (!view()->exists('exports.batch')) {
+            return response()->json(['error' => 'PDF view not found'], 500);
+        }
+
+        $pdf = Pdf::loadView('exports.batch', ['batch' => $batchMapped]);
+        return $pdf->download("batch_{$start}_{$end}.pdf");
     }
 
-    return response()->json(['error' => 'Formato no válido (solo csv o pdf)'], 400);
+    return response()->json(['error' => 'Invalid format (only csv or pdf)'], 400);
 }
+
 }

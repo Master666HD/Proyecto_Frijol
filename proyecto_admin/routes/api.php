@@ -36,9 +36,9 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/semillas', [SemillaController::class, 'obtenerHistorialLotes']); 
-    Route::get('/semillas/{id}', [SemillaController::class, 'obtenerDetalleLote']); 
-    Route::post('/semillas/comparar', [SemillaController::class, 'compararLotes']); 
-    Route::get('/semillas/exportar/{formato}', [SemillaController::class, 'exportarLote']); 
+    Route::get('/seeds', [SemillaController::class, 'getBatchHistory']); 
+    Route::get('/seeds/{id}', [SemillaController::class, 'getBatchDetail']); 
+    Route::post('/seeds/compare', [SemillaController::class, 'compareBatches']); 
+    Route::get('/seeds/export/{format}', [SemillaController::class, 'exportBatch']); 
 });
 

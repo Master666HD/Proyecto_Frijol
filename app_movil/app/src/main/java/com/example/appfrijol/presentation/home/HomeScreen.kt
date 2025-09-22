@@ -27,6 +27,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Assignment
 import androidx.compose.material.icons.automirrored.outlined.TrendingUp
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.Scale
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,9 +43,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -124,6 +129,13 @@ fun HomeScreen(
                         icon = Icons.AutoMirrored.Outlined.Assignment,
                         content = {
                             lastBatchSummary?.let { summary ->
+
+                                ImprovedBarChart(
+                                    title = "Distribución por Estado",
+                                    data = summary.by_status ?: emptyMap(),
+                                    barColor = MaterialTheme.colorScheme.tertiary
+                                )
+                                Spacer(Modifier.height(16.dp))
                                 // Gráfica circular para distribución por tamaño
                                 PieChartCard(
                                     title = "Distribución por Tamaño",
@@ -148,12 +160,27 @@ fun HomeScreen(
 
                                 Spacer(Modifier.height(16.dp))
 
-                                // Gráfica lineal para peso
-                                LineChartCard(
-                                    title = "Distribución por Peso",
-                                    data = summary.by_weight ?: emptyMap(),
-                                    lineColor = MaterialTheme.colorScheme.secondary
+                                val sampleData = mapOf(
+                                    "Lote 1" to 15,
+                                    "Lote 2" to 22,
+                                    "Lote 3" to 18,
+                                    "Lote 4" to 25,
+                                    "Lote 5" to 20,
+                                    "Lote 6" to 28
                                 )
+                                // Gráfica lineal para peso
+                                // Reemplaza el LineChartCard con esto:
+                                if (!summary.by_weight.isNullOrEmpty()) {
+                                    WeightBarChart(
+                                        title = "Distribución por Peso",
+                                        data = summary.by_weight,
+                                        barColor = MaterialTheme.colorScheme.secondary
+                                    )
+                                    Spacer(Modifier.height(16.dp))
+                                } else {
+                                    EmptyWeightChart("Distribución por Peso")
+                                    Spacer(Modifier.height(16.dp))
+                                }
 
                                 Spacer(Modifier.height(8.dp))
 
@@ -273,6 +300,243 @@ fun AnalyticsCard(
     }
 }
 
+@Composable
+fun WeightBarChart(
+    title: String,
+    data: Map<String, Int>, // Peso -> Cantidad de semillas
+    barColor: Color
+) {
+    val weights = data.keys.sortedBy { it.toFloatOrNull() ?: 0f }
+    val counts = weights.map { data[it] ?: 0 }
+    val maxCount = counts.maxOrNull() ?: 1
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+            ) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val paddingLeft = 60f
+                    val paddingRight = 30f
+                    val paddingTop = 30f
+                    val paddingBottom = 60f
+
+                    val chartWidth = size.width - paddingLeft - paddingRight
+                    val chartHeight = size.height - paddingTop - paddingBottom
+
+                    // Dibujar eje Y (CANTIDAD - vertical)
+                    drawLine(
+                        color = Color.Gray.copy(alpha = 0.5f),
+                        start = Offset(paddingLeft, paddingTop),
+                        end = Offset(paddingLeft, size.height - paddingBottom),
+                        strokeWidth = 2f
+                    )
+
+                    // Dibujar eje X (PESOS - horizontal)
+                    drawLine(
+                        color = Color.Gray.copy(alpha = 0.5f),
+                        start = Offset(paddingLeft, size.height - paddingBottom),
+                        end = Offset(size.width - paddingRight, size.height - paddingBottom),
+                        strokeWidth = 2f
+                    )
+
+                    // Dibujar líneas de referencia horizontales
+                    for (i in 0..4) {
+                        val y = paddingTop + chartHeight * (1 - i / 4f)
+                        drawLine(
+                            color = Color.Gray.copy(alpha = 0.2f),
+                            start = Offset(paddingLeft, y),
+                            end = Offset(size.width - paddingRight, y),
+                            strokeWidth = 1f
+                        )
+
+                        // Etiquetas del eje Y (Cantidad)
+                        val countValue = (maxCount * (i / 4f)).toInt()
+                        drawContext.canvas.nativeCanvas.apply {
+                            drawText(
+                                countValue.toString(),
+                                paddingLeft - 10f,
+                                y + 5f,
+                                android.graphics.Paint().apply {
+                                    color = android.graphics.Color.GRAY
+                                    textSize = 20f
+                                    textAlign = android.graphics.Paint.Align.RIGHT
+                                }
+                            )
+                        }
+                    }
+
+                    // Dibujar barras
+                    if (weights.isNotEmpty()) {
+                        val barWidth = chartWidth / weights.size * 0.7f
+                        val barSpacing = chartWidth / weights.size * 0.3f
+
+                        weights.forEachIndexed { index, weight ->
+                            val count = data[weight] ?: 0
+                            val x = paddingLeft + index * (barWidth + barSpacing)
+                            val barHeight = (count.toFloat() / maxCount) * chartHeight
+
+                            // Dibujar barra
+                            drawRoundRect(
+                                color = barColor,
+                                topLeft = Offset(x, size.height - paddingBottom - barHeight),
+                                size = Size(barWidth, barHeight),
+                                cornerRadius = CornerRadius(4f, 4f)
+                            )
+
+                            // Etiqueta del peso (eje X)
+                            drawContext.canvas.nativeCanvas.apply {
+                                drawText(
+                                    "$weight g",
+                                    x + barWidth / 2,
+                                    size.height - paddingBottom + 20f,
+                                    android.graphics.Paint().apply {
+                                        color = android.graphics.Color.GRAY
+                                        textSize = 16f
+                                        textAlign = android.graphics.Paint.Align.CENTER
+                                    }
+                                )
+                            }
+
+                            // Etiqueta de la cantidad (arriba de la barra)
+                            if (count > 0) {
+                                drawContext.canvas.nativeCanvas.apply {
+                                    drawText(
+                                        count.toString(),
+                                        x + barWidth / 2,
+                                        size.height - paddingBottom - barHeight - 5f,
+                                        android.graphics.Paint().apply {
+                                            color = android.graphics.Color.BLACK
+                                            textSize = 16f
+                                            textAlign = android.graphics.Paint.Align.CENTER
+                                            typeface = android.graphics.Typeface.DEFAULT_BOLD
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Etiqueta del eje Y
+                    drawContext.canvas.nativeCanvas.apply {
+                        drawText(
+                            "Cantidad",
+                            paddingLeft - 45f,
+                            paddingTop - 10f,
+                            android.graphics.Paint().apply {
+                                color = android.graphics.Color.GRAY
+                                textSize = 20f
+                                textAlign = android.graphics.Paint.Align.RIGHT
+                            }
+                        )
+                    }
+
+                    // Etiqueta del eje X
+                    drawContext.canvas.nativeCanvas.apply {
+                        drawText(
+                            "Peso (gramos)",
+                            size.width / 2,
+                            size.height - 20f,
+                            android.graphics.Paint().apply {
+                                color = android.graphics.Color.GRAY
+                                textSize = 20f
+                                textAlign = android.graphics.Paint.Align.CENTER
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Leyenda estadística
+            if (data.isNotEmpty()) {
+                Spacer(Modifier.height(16.dp))
+                val totalSemillas = data.values.sum()
+
+                // Calcular el promedio de manera más explícita
+                var sumaPesos = 0f
+                data.entries.forEach { (peso, count) ->
+                    sumaPesos += (peso.toFloatOrNull() ?: 0f) * count
+                }
+                val promedio = sumaPesos / totalSemillas
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Total: $totalSemillas semillas",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                    Text(
+                        text = "Promedio: ${"%.2f".format(promedio)} g",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyWeightChart(title: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Scale,
+                contentDescription = "Sin datos de peso",
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "No hay datos de peso disponibles",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+    }
+}
 // Gráfica de barras mejorada
 @Composable
 fun ImprovedBarChart(
@@ -423,68 +687,130 @@ fun PieChartCard(
 }
 
 // Gráfica de líneas
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LineChartCard(
     title: String,
-    data: Map<String, Int>,
+    data: Map<String, Int>, // clave: categoría (semilla), valor: peso
     lineColor: Color
 ) {
-    val values = data.values.toList()
-    val maxValue = (values.maxOrNull() ?: 1).toFloat()
-    val minValue = (values.minOrNull() ?: 0).toFloat()
+    val categories = data.keys.toList()
+    val weights = data.values.toList()
 
-    Column {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-        )
+    // Manejar caso cuando no hay datos
+    if (weights.isEmpty() || categories.isEmpty()) {
+        EmptyChartPlaceholder(title = title)
+        return
+    }
 
-        Spacer(Modifier.height(12.dp))
+    val maxWeight = (weights.maxOrNull() ?: 1).toFloat()
+    val minWeight = (weights.minOrNull() ?: 0).toFloat()
 
-        Box(
+    // Prevenir división por cero
+    val weightRange = if (maxWeight - minWeight == 0f) 1f else maxWeight - minWeight
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(8.dp)
+                .padding(16.dp)
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                // Dibujar líneas de referencia
-                drawLine(
-                    color = Color.Gray.copy(alpha = 0.3f),
-                    start = Offset(0f, size.height),
-                    end = Offset(size.width, size.height),
-                    strokeWidth = 1f
-                )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
 
-                // Dibujar línea de datos
-                if (values.isNotEmpty()) {
-                    val points = values.mapIndexed { index, value ->
-                        Offset(
-                            x = (index.toFloat() / (values.size - 1)) * size.width,
-                            y = size.height - ((value - minValue) / (maxValue - minValue)) * size.height
+            Spacer(Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+            ) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val paddingLeft = 50f
+                    val paddingRight = 30f
+                    val paddingTop = 30f
+                    val paddingBottom = 50f
+
+                    val chartWidth = size.width - paddingLeft - paddingRight
+                    val chartHeight = size.height - paddingTop - paddingBottom
+
+                    // Dibujar eje Y (PESOS - vertical)
+                    drawLine(
+                        color = Color.Gray.copy(alpha = 0.5f),
+                        start = Offset(paddingLeft, paddingTop),
+                        end = Offset(paddingLeft, size.height - paddingBottom),
+                        strokeWidth = 2f
+                    )
+
+                    // Dibujar eje X (SEMILLAS/CATEGORÍAS - horizontal)
+                    drawLine(
+                        color = Color.Gray.copy(alpha = 0.5f),
+                        start = Offset(paddingLeft, size.height - paddingBottom),
+                        end = Offset(size.width - paddingRight, size.height - paddingBottom),
+                        strokeWidth = 2f
+                    )
+
+                    // Dibujar líneas de referencia horizontales (para pesos)
+                    for (i in 0..4) {
+                        val y = paddingTop + chartHeight * (1 - i / 4f)
+                        drawLine(
+                            color = Color.Gray.copy(alpha = 0.2f),
+                            start = Offset(paddingLeft, y),
+                            end = Offset(size.width - paddingRight, y),
+                            strokeWidth = 1f
                         )
+
+                        // Etiquetas del eje Y (PESOS)
+                        val weightValue = (minWeight + weightRange * (i / 4f)).toInt()
+                        drawContext.canvas.nativeCanvas.apply {
+                            drawText(
+                                "$weightValue g",
+                                paddingLeft - 10f,
+                                y + 5f,
+                                android.graphics.Paint().apply {
+                                    color = android.graphics.Color.GRAY
+                                    textSize = 24f // 12.sp equivalent
+                                    textAlign = android.graphics.Paint.Align.RIGHT
+                                }
+                            )
+                        }
                     }
 
-                    // Dibujar línea suavizada
-                    for (i in 0 until points.size - 1) {
-                        drawLine(
-                            color = lineColor,
-                            start = points[i],
-                            end = points[i + 1],
-                            strokeWidth = 3f,
-                            cap = StrokeCap.Round
-                        )
+                    // Calcular puntos para la línea
+                    val points = weights.mapIndexed { index, weight ->
+                        val x = paddingLeft + (index.toFloat() / (weights.size - 1)) * chartWidth
+                        val y = paddingTop + chartHeight - ((weight - minWeight) / weightRange) * chartHeight
+                        Offset(x, y)
+                    }
+
+                    // Dibujar línea de datos
+                    if (points.size > 1) {
+                        for (i in 0 until points.size - 1) {
+                            drawLine(
+                                color = lineColor,
+                                start = points[i],
+                                end = points[i + 1],
+                                strokeWidth = 4f,
+                                cap = StrokeCap.Round
+                            )
+                        }
                     }
 
                     // Dibujar puntos
                     points.forEach { point ->
                         drawCircle(
                             color = lineColor,
-                            radius = 5f,
+                            radius = 6f,
                             center = point
                         )
                         drawCircle(
@@ -493,25 +819,95 @@ fun LineChartCard(
                             center = point
                         )
                     }
-                }
-            }
 
-            // Etiquetas del eje X
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                data.keys.forEach { key ->
-                    Text(
-                        text = key,
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
+                    // Etiquetas del eje X (CATEGORÍAS/SEMILLAS)
+                    categories.forEachIndexed { index, category ->
+                        val x = paddingLeft + (index.toFloat() / (categories.size - 1)) * chartWidth
+
+                        // Rotar texto para mejor visualización
+                        drawContext.canvas.nativeCanvas.apply {
+                            save()
+                            translate(x, size.height - paddingBottom + 20f)
+                            rotate(-45f)
+                            drawText(
+                                category.take(10), // Limitar longitud
+                                0f,
+                                0f,
+                                android.graphics.Paint().apply {
+                                    color = android.graphics.Color.GRAY
+                                    textSize = 20f // 10.sp equivalent
+                                    textAlign = android.graphics.Paint.Align.CENTER
+                                }
+                            )
+                            restore()
+                        }
+                    }
+
+                    // Etiqueta del eje Y
+                    drawContext.canvas.nativeCanvas.apply {
+                        drawText(
+                            "Peso (g)",
+                            paddingLeft - 40f,
+                            paddingTop - 10f,
+                            android.graphics.Paint().apply {
+                                color = android.graphics.Color.GRAY
+                                textSize = 24f
+                                textAlign = android.graphics.Paint.Align.RIGHT
+                            }
+                        )
+                    }
+
+                    // Etiqueta del eje X
+                    drawContext.canvas.nativeCanvas.apply {
+                        drawText(
+                            "Semillas",
+                            size.width / 2,
+                            size.height - 10f,
+                            android.graphics.Paint().apply {
+                                color = android.graphics.Color.GRAY
+                                textSize = 24f
+                                textAlign = android.graphics.Paint.Align.CENTER
+                            }
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun EmptyChartPlaceholder(title: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.BarChart,
+                contentDescription = "Sin datos",
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "No hay datos de peso disponibles",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
         }
     }
 }

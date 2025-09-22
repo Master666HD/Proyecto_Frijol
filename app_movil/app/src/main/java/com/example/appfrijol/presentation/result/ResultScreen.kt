@@ -72,7 +72,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.appfrijol.domain.model.Semilla
+import com.example.appfrijol.domain.model.Seed
 import com.example.appfrijol.presentation.session.SessionViewModel
 import kotlinx.coroutines.launch
 
@@ -80,21 +80,21 @@ import kotlinx.coroutines.launch
 @Composable
 fun ResultScreen(
     sessionViewModel: SessionViewModel = hiltViewModel(),
-    semillaViewModel: SemillaViewModel = hiltViewModel()
+    seedViewModel: SeedViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val userName by sessionViewModel.userName.collectAsState()
-    val lotes by semillaViewModel.historial.collectAsState()
-    val error by semillaViewModel.error.collectAsState()
+    val lotes by seedViewModel.history.collectAsState()
+    val error by seedViewModel.error.collectAsState()
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val coroutineScope = rememberCoroutineScope()
 
-    var semillasEnLote by remember { mutableStateOf<List<Semilla>>(emptyList()) }
+    var semillasEnLote by remember { mutableStateOf<List<Seed>>(emptyList()) }
     var tituloLote by remember { mutableStateOf("") }
     var selectedTab by remember { mutableStateOf(0) }
 
-    LaunchedEffect(Unit) { semillaViewModel.cargarHistorial() }
+    LaunchedEffect(Unit) { seedViewModel.loadHistory() }
 
     // Colores personalizados
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -216,9 +216,9 @@ fun ResultScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        semillasEnLote = lote.semillas
+                                        semillasEnLote = lote.seeds
                                         tituloLote =
-                                            "Lote ${index + 1}: ${lote.inicio} - ${lote.fin}"
+                                            "Lote ${index + 1}: ${lote.start} - ${lote.end}"
                                         coroutineScope.launch { sheetState.show() }
                                     }
                                     ,
@@ -240,7 +240,7 @@ fun ResultScreen(
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = "${lote.inicio} - ${lote.fin}",
+                                            text = "${lote.start} - ${lote.end}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = onSurfaceColor.copy(alpha = 0.7f)
                                         )
@@ -253,10 +253,10 @@ fun ResultScreen(
                                     }
 
                                     Checkbox(
-                                        checked = semillaViewModel.selectedIds.contains(index),
+                                        checked = seedViewModel.selectedIds.contains(index),
                                         onCheckedChange = { checked ->
-                                            if (checked) semillaViewModel.selectedIds.add(index)
-                                            else semillaViewModel.selectedIds.remove(index)
+                                            if (checked) seedViewModel.selectedIds.add(index)
+                                            else seedViewModel.selectedIds.remove(index)
                                         },
                                         colors = CheckboxDefaults.colors(checkedColor = primaryColor)
                                     )
@@ -271,7 +271,7 @@ fun ResultScreen(
                 // Botón de comparación
                 Button(
                     onClick = { /* implementar comparación */ },
-                    enabled = semillaViewModel.selectedIds.size >= 2,
+                    enabled = seedViewModel.selectedIds.size >= 2,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = primaryColor,
@@ -290,7 +290,7 @@ fun ResultScreen(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Comparar ${semillaViewModel.selectedIds.size} lotes",
+                        text = "Comparar ${seedViewModel.selectedIds.size} lotes",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
                     )
@@ -354,15 +354,15 @@ fun ResultScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            val fechaInicio = semillasEnLote.firstOrNull()?.fechaRegistro?.replace(":", "-") ?: "inicio"
-                            val fechaFin = semillasEnLote.lastOrNull()?.fechaRegistro?.replace(":", "-") ?: "fin"
+                            val fechaInicio = semillasEnLote.firstOrNull()?.registration_date?.replace(":", "-") ?: "inicio"
+                            val fechaFin = semillasEnLote.lastOrNull()?.registration_date?.replace(":", "-") ?: "fin"
 
                             OutlinedButton(
                                 onClick = {
                                     coroutineScope.launch {
-                                        val result = semillaViewModel.exportarLote(semillasEnLote, "csv")
+                                        val result = seedViewModel.exportBatch(semillasEnLote, "csv")
                                         result.onSuccess { data ->
-                                            semillaViewModel.guardarYAbrirArchivo(
+                                            seedViewModel.saveAndOpenFile(
                                                 context,
                                                 data,
                                                 "lote_${fechaInicio}_a_${fechaFin}.csv",
@@ -385,9 +385,9 @@ fun ResultScreen(
                             Button(
                                 onClick = {
                                     coroutineScope.launch {
-                                        val result = semillaViewModel.exportarLote(semillasEnLote, "pdf")
+                                        val result = seedViewModel.exportBatch(semillasEnLote, "pdf")
                                         result.onSuccess { data ->
-                                            semillaViewModel.guardarYAbrirArchivo(
+                                            seedViewModel.saveAndOpenFile(
                                                 context,
                                                 data,
                                                 "lote_${fechaInicio}_a_${fechaFin}.pdf",
@@ -416,7 +416,7 @@ fun ResultScreen(
 }
 
 @Composable
-fun GraficasTab(semillasEnLote: List<Semilla>) {
+fun GraficasTab(semillasEnLote: List<Seed>) {
     val context = LocalContext.current
 
     if (semillasEnLote.isEmpty()) {
@@ -432,21 +432,23 @@ fun GraficasTab(semillasEnLote: List<Semilla>) {
     }
 
     // Datos para gráficos
+    val datosPorEstado = semillasEnLote.groupBy { it.status.lowercase() }
+        .mapValues { it.value.size }
     val datosPorColor = semillasEnLote.groupBy { it.color.lowercase() }
         .mapValues { it.value.size }
 
     val datosPorPeso: Map<String, Int> = semillasEnLote.groupBy { semilla ->
         when {
-            semilla.peso >= 0.0 && semilla.peso <= 20.0 -> "0g-20g"  // Rango inclusivo
-            semilla.peso > 20.0 && semilla.peso <= 40.0 -> "21g-40g " // Ajusta los límites como necesites
-            semilla.peso > 40.0 && semilla.peso <= 60.0 -> "41g-60g"
-            semilla.peso > 60.0 && semilla.peso <= 80.0 -> "61g-80g"
-            semilla.peso > 80.0 && semilla.peso <= 100.0 -> "81g-100g" // Asumiendo un límite superior
+            semilla.weight >= 0.0 && semilla.weight <= 20.0 -> "0g-20g"  // Rango inclusivo
+            semilla.weight > 20.0 && semilla.weight<= 40.0 -> "21g-40g " // Ajusta los límites como necesites
+            semilla.weight > 40.0 && semilla.weight <= 60.0 -> "41g-60g"
+            semilla.weight > 60.0 && semilla.weight <= 80.0 -> "61g-80g"
+            semilla.weight > 80.0 && semilla.weight <= 100.0 -> "81g-100g" // Asumiendo un límite superior
             else -> {
                 // Decidir qué hacer con pesos fuera de los rangos esperados
                 // Podría ser "Otros", o si esperas que todos caigan en 0-100:
-                if (semilla.peso > 100.0) "81-100" // O ">100"
-                else if (semilla.peso < 0.0) "<0" // O agrupar negativos en "0-20"
+                if (semilla.weight > 100.0) "81-100" // O ">100"
+                else if (semilla.weight < 0.0) "<0" // O agrupar negativos en "0-20"
                 else "Desconocido" // O lanzar una excepción si es un estado inválido
             }
         }
@@ -459,6 +461,25 @@ fun GraficasTab(semillasEnLote: List<Semilla>) {
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
     ) {
+
+
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+
+        Text(
+            "Distribución por Estado",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+        GraficoCircular(
+            datos = datosPorEstado,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .padding(8.dp)
+        )
+
         // Gráfico de colores
         Text(
             "Distribución por Color",
@@ -492,7 +513,7 @@ fun GraficasTab(semillasEnLote: List<Semilla>) {
 }
 
 @Composable
-fun DatosTab(semillasEnLote: List<Semilla>) {
+fun DatosTab(semillasEnLote: List<Seed>) {
     if (semillasEnLote.isEmpty()) {
         Box(
             modifier = Modifier
@@ -547,14 +568,16 @@ fun DatosTab(semillasEnLote: List<Semilla>) {
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium
                         )
+
                         Text(
-                            text = "Color: ${semilla.color}, Peso: ${semilla.peso}",
+                            text = "Estado: ${semilla.status}, Color: ${semilla.color}, Peso: ${semilla.weight}",
                             style = MaterialTheme.typography.bodySmall
                         )
+
                     }
 
                     Text(
-                        text = semilla.fechaRegistro,
+                        text = semilla.registration_date,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )

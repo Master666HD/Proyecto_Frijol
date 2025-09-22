@@ -5,7 +5,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appfrijol.data.remote.api.ApiService
-import com.example.appfrijol.data.remote.models.ApiResponse
+import com.example.appfrijol.data.remote.dto.ApiResponse
 import com.example.appfrijol.domain.model.User
 import com.google.gson.Gson
 import com.google.gson.JsonObject

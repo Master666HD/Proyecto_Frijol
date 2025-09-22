@@ -5,33 +5,44 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.appfrijol.data.remote.api.ApiService
-import com.example.appfrijol.data.remote.models.LastBatchSummaryResponse
-import com.example.appfrijol.data.remote.models.ProductivityMetricsResponse
+import com.example.appfrijol.data.repository.SeedRepository
+import com.example.appfrijol.domain.model.LastBatchSummary
+import com.example.appfrijol.domain.model.ProductivityMetrics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val apiService: ApiService
+    private val repository: SeedRepository
 ) : ViewModel() {
 
-    var lastBatchSummary by mutableStateOf<LastBatchSummaryResponse?>(null)
+    var lastBatchSummary by mutableStateOf<LastBatchSummary?>(null)
         private set
 
-    var productivityMetrics by mutableStateOf<ProductivityMetricsResponse?>(null)
+    var productivityMetrics by mutableStateOf<ProductivityMetrics?>(null)
+        private set
+
+    var errorMessage by mutableStateOf<String?>(null)
         private set
 
     fun loadData() {
         viewModelScope.launch {
-            try {
-                lastBatchSummary = apiService.getLastBatchSummary()
-                productivityMetrics = apiService.getProductivityMetrics()
-            } catch (e: Exception) {
-                e.printStackTrace()
+            // Cargar último lote
+            repository.getLastBatchSummary().onSuccess { summary ->
+                lastBatchSummary = summary
+            }.onFailure { e ->
+                errorMessage = e.message
+            }
+
+            // Cargar métricas de productividad
+            repository.getProductivityMetrics().onSuccess { metrics ->
+                productivityMetrics = metrics
+            }.onFailure { e ->
+                errorMessage = e.message
             }
         }
     }
 }
+
 

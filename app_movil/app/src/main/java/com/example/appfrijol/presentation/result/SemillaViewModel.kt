@@ -7,9 +7,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.appfrijol.data.repository.SemillaRepository
-import com.example.appfrijol.domain.model.Lote
-import com.example.appfrijol.domain.model.Semilla
+import com.example.appfrijol.data.repository.SeedRepository
+import com.example.appfrijol.domain.model.Batch
+import com.example.appfrijol.domain.model.Seed
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,76 +18,61 @@ import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
-class SemillaViewModel @Inject constructor(
-    private val repository: SemillaRepository
+class SeedViewModel @Inject constructor(
+    private val repository: SeedRepository
 ) : ViewModel() {
 
-    // Historial completo de semillas
-    private val _historial = MutableStateFlow<List<Lote>>(emptyList())
-    val historial: StateFlow<List<Lote>> = _historial
+    // --------------------------
+    // State
+    // --------------------------
+    private val _history = MutableStateFlow<List<Batch>>(emptyList())
+    val history: StateFlow<List<Batch>> = _history
 
+    private val _comparison = MutableStateFlow<List<Seed>>(emptyList())
+    val comparison: StateFlow<List<Seed>> = _comparison
 
-    // Detalle de lote seleccionado (puede ser útil si quieres mostrar un resumen)
-    private val _detalleLote = MutableStateFlow<Semilla?>(null)
-    val detalleLote: StateFlow<Semilla?> = _detalleLote
-
-    // Resultado de comparación de varios lotes
-    private val _comparacion = MutableStateFlow<List<Semilla>>(emptyList())
-    val comparacion: StateFlow<List<Semilla>> = _comparacion
-
-    // Error general
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-
-
-
-    // --------------------------
-    // Funciones
-    // --------------------------
     val selectedIds = mutableStateListOf<Int>()
-    fun cargarHistorial() {
+
+
+    // --------------------------
+    // Functions
+    // --------------------------
+    fun loadHistory() {
         viewModelScope.launch {
-            val result = repository.obtenerHistorialLotes()
-            result.onSuccess { _historial.value = it }
+            val result = repository.getBatchHistory()
+            result.onSuccess { _history.value = it }
                 .onFailure { _error.value = it.message }
         }
     }
 
-    fun cargarDetalleLote(id: Int) {
-        viewModelScope.launch {
-            val result = repository.obtenerDetalleLote(id)
-            result.onSuccess { _detalleLote.value = it }
-                .onFailure { _error.value = it.message }
-        }
-    }
-
-    fun compararLotes(ids: List<Int>) {
+    fun compareBatches(ids: List<Int>) {
         if (ids.size < 2) {
             _error.value = "Selecciona al menos 2 lotes para comparar"
             return
         }
 
         viewModelScope.launch {
-            val result = repository.compararLotes(ids)
-            result.onSuccess { _comparacion.value = it }
+            val result = repository.compareBatches(ids)
+            result.onSuccess { _comparison.value = it }
                 .onFailure { _error.value = it.message }
         }
     }
 
-    suspend fun exportarLote(lote: List<Semilla>, formato: String): Result<ByteArray> {
-        if (lote.isEmpty()) return Result.failure(Exception("El lote está vacío"))
+    suspend fun exportBatch(batch: List<Seed>, format: String): Result<ByteArray> {
+        if (batch.isEmpty()) return Result.failure(Exception("El lote está vacío"))
 
-        val inicio = lote.first().fechaRegistro
-        val fin = lote.last().fechaRegistro
+        val start = batch.first().registration_date
+        val end = batch.last().registration_date
 
-        return repository.exportarLotePorRango(inicio, fin, formato)
+        return repository.exportBatchByRange(start, end, format)
     }
 
-
-    fun guardarYAbrirArchivo(context: Context, data: ByteArray, nombre: String, formato: String) {
+    fun saveAndOpenFile(context: Context, data: ByteArray, name: String, format: String) {
         try {
-            val file = File(context.cacheDir, nombre)
+            val file = File(context.cacheDir, name)
             file.writeBytes(data)
 
             val uri = FileProvider.getUriForFile(
@@ -96,7 +81,7 @@ class SemillaViewModel @Inject constructor(
                 file
             )
 
-            val mime = when (formato.lowercase()) {
+            val mime = when (format.lowercase()) {
                 "csv" -> "text/csv"
                 "pdf" -> "application/pdf"
                 else -> "*/*"
@@ -112,11 +97,9 @@ class SemillaViewModel @Inject constructor(
         }
     }
 
-
-
-    fun limpiarEstados() {
-        _detalleLote.value = null
-        _comparacion.value = emptyList()
+    fun clearStates() {
+        _comparison.value = emptyList()
         _error.value = null
     }
 }
+

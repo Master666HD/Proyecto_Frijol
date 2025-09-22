@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appfrijol.data.local.datastore.DataStoreManager
-import com.example.appfrijol.data.remote.models.LoginRequest
+import com.example.appfrijol.data.remote.dto.LoginRequest
 import com.example.appfrijol.data.repository.AuthRepository
 import com.example.appfrijol.domain.model.UserInfo
 import dagger.hilt.android.lifecycle.HiltViewModel

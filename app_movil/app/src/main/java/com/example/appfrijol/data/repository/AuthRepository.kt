@@ -2,8 +2,8 @@ package com.example.appfrijol.data.repository
 
 import com.example.appfrijol.data.local.datastore.DataStoreManager
 import com.example.appfrijol.data.remote.api.ApiService
-import com.example.appfrijol.data.remote.models.LoginRequest
-import com.example.appfrijol.data.remote.models.LoginResponse
+import com.example.appfrijol.data.remote.dto.LoginRequest
+import com.example.appfrijol.data.remote.dto.LoginResponse
 import javax.inject.Inject
 class AuthRepository @Inject constructor(
     private val api: ApiService,

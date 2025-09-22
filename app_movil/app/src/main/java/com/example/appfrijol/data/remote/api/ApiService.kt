@@ -1,13 +1,14 @@
 package com.example.appfrijol.data.remote.api
 
-import com.example.appfrijol.data.remote.models.ApiResponse
-import com.example.appfrijol.data.remote.models.CompararRequest
-import com.example.appfrijol.data.remote.models.LastBatchSummaryResponse
-import com.example.appfrijol.data.remote.models.LoginRequest
-import com.example.appfrijol.data.remote.models.LoginResponse
-import com.example.appfrijol.data.remote.models.ProductivityMetricsResponse
-import com.example.appfrijol.domain.model.Lote
-import com.example.appfrijol.domain.model.Semilla
+
+import com.example.appfrijol.data.remote.dto.ApiResponse
+import com.example.appfrijol.data.remote.dto.BatchDto
+import com.example.appfrijol.data.remote.dto.CompareRequest
+import com.example.appfrijol.data.remote.dto.LastBatchSummaryDto
+import com.example.appfrijol.data.remote.dto.LoginRequest
+import com.example.appfrijol.data.remote.dto.LoginResponse
+import com.example.appfrijol.data.remote.dto.ProductivityMetricsDto
+import com.example.appfrijol.data.remote.dto.SeedDto
 import com.example.appfrijol.domain.model.User
 import okhttp3.ResponseBody
 import retrofit2.Response
@@ -28,42 +29,33 @@ interface ApiService {
     @POST("login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
-
-
-
-
     // --- API Service ---
     @GET("last-batch-summary")
-    suspend fun getLastBatchSummary(): LastBatchSummaryResponse
+    suspend fun getLastBatchSummary(): LastBatchSummaryDto
 
     @GET("productivity-metrics")
-    suspend fun getProductivityMetrics(): ProductivityMetricsResponse
+    suspend fun getProductivityMetrics(): ProductivityMetricsDto
 
     // Historial de lotes
-    @GET("semillas")
-    suspend fun obtenerHistorialLotes(): Response<List<Lote>>
+    @GET("seeds")
+    suspend fun getBatchHistory(): Response<List<BatchDto>>
+
+    // Get batch detail
 
 
+    // Compare multiple batches
+    @POST("seeds/compare")
+    suspend fun compareBatches(
+        @Body request: CompareRequest
+    ): Response<List<SeedDto>>
 
-    // Detalle de un lote
-    @GET("semillas/{id}")
-    suspend fun obtenerDetalleLote(
-        @Path("id") id: Int
-    ): Response<Semilla>
-
-    // Comparar lotes
-    @POST("semillas/comparar")
-    suspend fun compararLotes(
-        @Body request: CompararRequest
-    ): Response<List<Semilla>>
-
-        @GET("semillas/exportar/{formato}")
-        suspend fun exportarLote(
-            @Path("formato") formato: String,
-            @Query("inicio") inicio: String,
-            @Query("fin") fin: String,
-
-        ): Response<ResponseBody>
+    // Export batch (CSV or PDF)
+    @GET("seeds/export/{format}")
+    suspend fun exportBatch(
+        @Path("format") format: String,      // "csv" or "pdf"
+        @Query("start") start: String,       // start date
+        @Query("end") end: String            // end date
+    ): Response<ResponseBody>
 
 
 

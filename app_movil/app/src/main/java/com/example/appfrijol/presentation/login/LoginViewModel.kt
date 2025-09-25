@@ -1,5 +1,6 @@
 package com.example.appfrijol.presentation.login
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,6 +13,7 @@ import com.example.appfrijol.domain.model.UserInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -32,11 +34,6 @@ class LoginViewModel @Inject constructor(
     }
 
     fun login(username: String, password: String, onSuccess: (UserInfo) -> Unit) {
-        if (username.isBlank() || password.isBlank()) {
-            message = "Usuario y contraseña requeridos"
-            return
-        }
-
         viewModelScope.launch {
             isLoading = true
             message = ""
@@ -44,21 +41,24 @@ class LoginViewModel @Inject constructor(
             val result = authRepository.login(LoginRequest(username, password))
 
             result.onSuccess { loginResponse ->
-                // Crear usuario con token
                 val userWithToken = loginResponse.user.copy(token = loginResponse.token)
 
-                // ✅ Guardar en DataStore (token + nombre)
+
+                Log.d("LoginVM", "🔹 LoginResponse -> id=${loginResponse.user.id}, " +
+                        "userName=${loginResponse.user.userName}, " +
+                        "firstName=${loginResponse.user.firstName}, " +
+                        "role=${loginResponse.user.role}")
+
+
+                // Guardamos en DataStore
                 dataStoreManager.saveSession(
                     token = loginResponse.token,
-                    userName = loginResponse.user.firstName ?: loginResponse.user.userName ?: "",
-                    userId = loginResponse.user.id.toString() // 🔑 convertir a String
+                    // Siempre priorizamos userName sobre firstName
+                    userName = loginResponse.user.userName ?: loginResponse.user.firstName ?: "",
+                    userId = loginResponse.user.id.toString()
                 )
 
-
-                // Guardar localmente
                 saveUser(userWithToken)
-
-                // Notificar éxito
                 onSuccess(userWithToken)
             }
 
@@ -77,5 +77,31 @@ class LoginViewModel @Inject constructor(
             onLogout()
         }
     }
+    init {
+        loadSession()
+    }
+
+    private fun loadSession() {
+        viewModelScope.launch {
+
+            val userName = dataStoreManager.userNameFlow.firstOrNull()
+            val token = dataStoreManager.tokenFlow.firstOrNull()
+            val userId = dataStoreManager.userIdFlow.firstOrNull()
+
+            if (!userName.isNullOrEmpty() && !token.isNullOrEmpty()) {
+                _currentUser.value = UserInfo(
+                    id = userId?.toIntOrNull() ?: 0,        // si no hay id → 0
+                    firstName = "",
+                    lastName = "",
+                    email = "",
+                    userName = userName ?: "",              // si no hay username → vacío
+                    role = "",
+                    token = token ?: ""
+                )
+
+            }
+        }
+    }
+
 }
 

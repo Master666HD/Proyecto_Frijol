@@ -15,12 +15,7 @@ class AuthRepository @Inject constructor(
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null) {
-                    // Guardar token + nombre + userId en DataStore
-                    dataStoreManager.saveSession(
-                        body.token ?: "",
-                        body.user.firstName ?: body.user.userName ?: "Usuario",
-                        body.user.id?.toString() ?: ""  // ✅ ahora es String
-                    )
+
 
 
                     Result.success(body)

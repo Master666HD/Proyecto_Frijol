@@ -1,6 +1,7 @@
 package com.example.appfrijol.data.local.datastore
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -32,7 +33,9 @@ class DataStoreManager @Inject constructor(
         preferences[USER_ID]
     }
 
-    suspend fun saveSession(token: String, userName: String, userId: Any) { // Any si viene como Int
+    suspend fun saveSession(token: String, userName: String, userId: Any) {
+        // Any si viene como Int
+        Log.d("DataStore", "💾 saveSession() -> token=$token, userName=$userName, userId=$userId")
         context.dataStore.edit { preferences ->
             preferences[TOKEN] = token
             preferences[USER_NAME] = userName
@@ -41,9 +44,16 @@ class DataStoreManager @Inject constructor(
     }
 
     suspend fun clearSession() {
+        Log.d("DataStore", "🧹 clearSession() ejecutado")
         context.dataStore.edit { preferences ->
             preferences.clear()
         }
     }
+    suspend fun clearToken() {
+        context.dataStore.edit { preferences ->
+            preferences[TOKEN] = ""
+        }
+    }
+
 }
 

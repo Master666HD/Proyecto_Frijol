@@ -9,6 +9,9 @@ import com.example.appfrijol.data.remote.dto.LoginRequest
 import com.example.appfrijol.data.remote.dto.LoginResponse
 import com.example.appfrijol.data.remote.dto.ProductivityMetricsDto
 import com.example.appfrijol.data.remote.dto.SeedDto
+import com.example.appfrijol.data.remote.dto.UpdatePasswordRequest
+import com.example.appfrijol.data.remote.dto.UpdateUserNameRequest
+import com.example.appfrijol.data.remote.dto.UserResponse
 import com.example.appfrijol.domain.model.User
 import okhttp3.ResponseBody
 import retrofit2.Response
@@ -16,6 +19,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -29,7 +33,21 @@ interface ApiService {
     @POST("login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
-    // --- API Service ---
+    @PUT("user")
+    suspend fun updateUserName(
+        @Body request: UpdateUserNameRequest
+    ): Response<UserResponse>
+
+
+
+
+    @PUT("user/password")
+    suspend fun updatePassword(
+        @Body request: UpdatePasswordRequest
+    ): Response<Void> // solo devuelve mensaje
+
+
+
     @GET("last-batch-summary")
     suspend fun getLastBatchSummary(): LastBatchSummaryDto
 

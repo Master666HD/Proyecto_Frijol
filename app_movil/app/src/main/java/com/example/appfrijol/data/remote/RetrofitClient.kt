@@ -24,7 +24,7 @@ val Context.dataStore by preferencesDataStore(name = "auth_prefs")
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    private const val BASE_URL = "http://192.168.100.155:8000/api/"
+    private const val BASE_URL = "http://10.90.171.96:8000/api/"
 
     @Provides
     @Singleton

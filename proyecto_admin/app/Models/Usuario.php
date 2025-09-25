@@ -62,16 +62,17 @@ class Usuario extends Authenticatable
         return $this->rol === 'Admin';
     }
     // Respuesta en inglés
-    public function toEnglishResponse()
-    {
-        return [
-            'id' => $this->id,
-            'firstName' => $this->nombres,    // Mapeo a inglés
-            'lastName' => $this->apellidos,    // Mapeo a inglés
-            'email' => $this->correo,           // Mapeo a inglés
-            'userName' => $this->usuario,        // Mapeo a inglés
-            'role' => $this->rol
-        ];
-    }
+   public function toEnglishResponse()
+{
+    return [
+        'id'        => $this->idUsuario,   // 👈 usar la PK real
+        'firstName' => $this->nombres,
+        'lastName'  => $this->apellidos,
+        'email'     => $this->correo,
+        'userName'  => $this->usuario,
+        'role'      => $this->rol,
+    ];
+}
+
 
 }

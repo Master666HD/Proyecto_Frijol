@@ -26,7 +26,9 @@ Route::post('/login',    [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout',     [AuthController::class, 'logout']);
-    Route::post('/logout-all', [AuthController::class, 'logoutAll']); // opcional
+    Route::post('/logout-all', [AuthController::class, 'logoutAll']);
+    Route::put('/user',        [AuthController::class, 'update']);
+    Route::put('/user/password',[AuthController::class, 'updatePassword']); 
 });
 Route::get('/semillas', [SemillaController::class, 'obtenerPorUsuario']);
 Route::get('/classification/summary', [ClasificacionController::class, 'getResumenClasificacion']);

@@ -20,6 +20,55 @@ class SemillaController extends Controller
 
     return response()->json($semillas);
 }
+
+
+public function store(Request $request)
+{
+   
+    $request->validate([
+        'idUsuario'   => 'required|integer|exists:usuarios,id',
+        'idPrototipo' => 'nullable|integer|exists:prototipos,id',
+        'uid'          => 'required|string|unique:semillas,uid',
+        'color'        => 'required|string',
+        'peso'         => 'required|numeric',
+        'tamano'       => 'required|string',
+    ]);
+
+   
+    $criterios = 0;
+
+    if (strtoupper($request->color) === 'BUENO') {
+        $criterios++;
+    }
+
+    if (strtoupper($request->tamano) === 'GRANDE') {
+        $criterios++;
+    }
+
+    if ($request->peso >= 0.2 && $request->peso <= 1.5) {
+        $criterios++;
+    }
+
+    $estado = ($criterios >= 2) ? 'APTA' : 'NO APTA';
+
+
+    $semilla = Semilla::create([
+        'idUsuario'   => $request->id_usuario,
+        'idPrototipo' => $request->id_prototipo,
+        'uid'          => $request->uid,
+        'color'        => $request->color,
+        'peso'         => $request->peso,
+        'tamano'       => $request->tamano,
+        'estado'       => $estado,
+    ]);
+
+    return response()->json([
+        'message' => 'Semilla registrada correctamente',
+        'data'    => $semilla
+    ], 201);
+}
+
+
 public function lastBatchSummary()
 {
     $idUser = auth()->user()->id;

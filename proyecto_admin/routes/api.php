@@ -31,7 +31,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/password',[AuthController::class, 'updatePassword']); 
 });
 Route::get('/semillas', [SemillaController::class, 'obtenerPorUsuario']);
+Route::get('/resumen_clasificacion', [ClasificacionController::class, 'getResumenClasificacion']);
+Route::post('/semillas', [SemillaController::class, 'store']);
 Route::get('/classification/summary', [ClasificacionController::class, 'getResumenClasificacion']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/last-batch-summary', [SemillaController::class, 'lastBatchSummary']);
     Route::get('/productivity-metrics', [SemillaController::class, 'productivityMetrics']);

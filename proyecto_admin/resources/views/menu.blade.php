@@ -35,107 +35,60 @@
     </div>
 
     <!-- ##### Header Area Start ##### -->
-    <header class="header-area">
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container-fluid">
+            
+            <!-- Logo -->
+            <a class="navbar-brand d-flex align-items-center" href="{{ route('vistaAdmin') }}">
+                <style>
+                    .fontsize {
+                        font-size: 40px;
+                        padding-left: 50px;
+                    }
+                </style>
+                <span class=" fw-bold text-white fontsize">FRIJOL<span class="text-success">TECH</span></span>
+            </a>
 
-        <!-- ***** Navbar Area ***** -->
-        <div class="alazea-main-menu">
-            <div class="classy-nav-container breakpoint-off">
-                <div class="container">
-                    <!-- Menu -->
-                    <nav class="classy-navbar justify-content-between" id="alazeaNav">
+            <!-- Botón hamburguesa -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" 
+                aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-                        <!-- Nav Brand -->
+            <!-- Enlaces -->
+              <div class="collapse navbar-collapse justify-content-center fontsize" id="navbarContent">
+        <ul class="navbar-nav gap-4 text-center">
+          <li class="nav-item">
+            <a class="nav-link fs-5 text-white" href="{{ route('vistaAdmin') }}">Menú</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fs-5 text-white" href="{{ route('usuarios.index') }}">Agricultores</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fs-5 text-white" href="{{ route('operacion.index') }}">Operaciones</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fs-5 text-white" href="{{ route('reportes.index') }}">Reportes</a>
+          </li>
+        </ul>
+      </div>
 
-                        <a href="{{route('vistaAdmin')}}" class="nav-brand">
-                            <img src="img/core-img/logo4.png" alt="">
-                        </a>
-
-                        <!-- Navbar Toggler -->
-                        <div class="classy-navbar-toggler">
-                            <span class="navbarToggler"><span></span><span></span><span></span></span>
-                        </div>
-
-                        <!-- Menu -->
-                        <div class="classy-menu">
-
-                            <!-- Close Button -->
-                            <div class="classycloseIcon">
-                                <div class="cross-wrap"><span class="top"></span><span class="bottom"></span></div>
-                            </div>
-
-                            <!-- Navbar Start -->
-                            <div class="classynav">
-                                <ul>
-                                    <li><a href="{{route('vistaAdmin')}}">Menu</a></li>
-                                    <li><a href="{{route('usuarios.index')}}">Agricultores</a></li>
-                                    <li><a href="{{route('operacion.create')}}">Registrar Operación</a></li> 
-                                    <li><a href="{{route('reportes.index')}}">Reportes</a></li>
-                                    <li>
-                                        <form action="{{ route('logout') }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            <button type="submit" class="btn btn-transparent" style="font-size: 20px; color: #fff; padding: 0px 0px 5px 40px;">Cerrar sesión</button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </div>
-                            <!-- Navbar End -->
-                        </div>
-                    </nav>
-
-                    <!-- Search Form -->
-                    <div class="search-form">
-                        <form action="#" method="get">
-                            <input type="search" name="search" id="search" placeholder="Type keywords &amp; press enter...">
-                            <button type="submit" class="d-none"></button>
-                        </form>
-                        <!-- Close Icon -->
-                        <div class="closeIcon"><i class="fa fa-times" aria-hidden="true"></i></div>
-                    </div>
-                </div>
-            </div>
+      <!-- Botón Cerrar sesión -->
+      <form action="{{ route('logout') }}" method="POST" class="d-none d-lg-block">
+        @csrf
+        <button type="submit" class="btn btn-outline-warning rounded-pill px-3 fs-6">
+          Cerrar sesión
+        </button>
+      </form>
         </div>
-    </header>
+    </nav>
+</header>
+
+
     <!-- ##### Header Area End ##### -->
 
     <!-- ##### Hero Area Start ##### -->
-    <section class="hero-area">
-        <div class="hero-post-slides owl-carousel">
-
-            <!-- Single Hero Post -->
-            <div class="single-hero-post bg-overlay">
-                <!-- Post Image -->
-                <div class="slide-img bg-img" style="background-image: url(img/bg-img/1.jpg);"></div>
-                <div class="container h-100">
-                    <div class="row h-100 align-items-center">
-                        <div class="col-12">
-                            <!-- Post Content -->
-                            <div class="hero-slides-content text-center">
-                                <h2>PANEL DE CONTROL Y OPERACIONES</h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Single Hero Post -->
-            <div class="single-hero-post bg-overlay">
-                <!-- Post Image -->
-                <div class="slide-img bg-img" style="background-image: url(img/bg-img/2.jpg);"></div>
-                <div class="container h-100">
-                    <div class="row h-100 align-items-center">
-                        <div class="col-12">
-                            <!-- Post Content -->
-                            <div class="hero-slides-content text-center">
-                                <h2>LOS FRIJOLES SON VIDA Y SALUD</h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </section>
-    <!-- ##### Hero Area End ##### -->
 
 
 
@@ -167,6 +120,7 @@
     <!-- ##### Footer Area End ##### -->
 
     <!-- ##### All Javascript Files ##### -->
+    <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <!-- jQuery-2.2.4 js -->
     <script src="{{ asset('js/jquery/jquery-2.2.4.min.js') }}"></script>
     <!-- Popper js -->

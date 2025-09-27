@@ -3,44 +3,76 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Semilla;
+use App\Models\Prototipo;
+use Carbon\Carbon;
+use App\Models\OperacionPrototipo;
+
 use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
     public function index()
     {
-        // Total de semillas
-        $total = Semilla::count();
+         // 📌 KPI’s generales
+        $totalOperaciones = OperacionPrototipo::count();
+        $totalVentas = OperacionPrototipo::where('tipoOperacion', 'venta')->count();
+        $totalAlquileres = OperacionPrototipo::where('tipoOperacion', 'alquiler')->count();
 
-        // Semillas BUENAS y MALAS
-        $semillasBuenas = Semilla::where('estado', 'APTO')->count();
-        $semillasMalas = Semilla::where('estado', 'NO APTO')->count();
+        // 💰 Ingresos totales
+        $ingresosTotales = OperacionPrototipo::sum('precio');
+        $ingresosVentas = OperacionPrototipo::where('tipoOperacion', 'venta')->sum('precio');
+        $ingresosAlquileres = OperacionPrototipo::where('tipoOperacion', 'alquiler')->sum('precio');
 
-        // Últimas semillas registradas (5)
-        $ultimasSemillas = Semilla::with('usuario')->orderBy('fechaRegistro', 'desc')->get();
+        // 📊 Estado de prototipos (para gráfico de pastel)
+        $prototiposParaAlquilar = Prototipo::where('estado', 1)->count();
+        $prototiposParaVender = Prototipo::where('estado', 2)->count();
+        $prototiposMantenimiento = Prototipo::where('estado', 3)->count();
+    
+        $prototiposVendidos = Prototipo::where('estado', 4)->count();
+        $prototiposAlquilados = Prototipo::where('estado', 5)->count();
 
-        // Gráfico de tendencia por día
-        $tendencia = Semilla::select(
-            DB::raw('DATE(fechaRegistro) as fecha'),
-            DB::raw('COUNT(*) as total')
-        )
-        ->groupBy('fecha')
-        ->orderBy('fecha', 'asc')
-        ->get();
-        // Prepare data for Chart.js
-        $labels = $tendencia->pluck('fecha')->toArray();
-        $data = $tendencia->pluck('total')->toArray();
+     
 
+        // 🗓️ Gráfico de barras (operaciones por mes)
+        $operacionesPorMes = OperacionPrototipo::select(
+                DB::raw('MONTH(fechaRegistro) as mes'),
+                DB::raw('SUM(CASE WHEN tipoOperacion = "venta" THEN 1 ELSE 0 END) as ventas'),
+                DB::raw('SUM(CASE WHEN tipoOperacion = "alquiler" THEN 1 ELSE 0 END) as alquileres')
+            )
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->get();
 
-        return view('vistaAdmin', [
-            'total' => $total,
-            'semillasBuenas' => $semillasBuenas,
-            'semillasMalas' => $semillasMalas,
-            'ultimasSemillas' => $ultimasSemillas,
-            'tendencia' => $tendencia,
-            'labels' => $labels, 
-            'data' => $data
-        ]);
-    }
+        // Etiquetas de los meses
+        $labelsMeses = $operacionesPorMes->map(function ($op) {
+            return Carbon::create()->month($op->mes)->locale('es')->monthName;
+        });
+
+        $dataVentas = $operacionesPorMes->pluck('ventas');
+        $dataAlquileres = $operacionesPorMes->pluck('alquileres');
+
+        // 📋 Últimas operaciones
+        $ultimasOperaciones = OperacionPrototipo::with(['usuario', 'prototipo'])
+            ->orderBy('fechaRegistro', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('vistaAdmin', compact(
+            'totalOperaciones',
+            'totalVentas',
+            'totalAlquileres',
+            'ingresosTotales',
+            'ingresosVentas',
+            'ingresosAlquileres',
+            'prototiposVendidos',
+            'prototiposAlquilados',
+            'labelsMeses',
+            'dataVentas',
+            'prototiposParaAlquilar',
+            'prototiposParaVender',
+            'prototiposMantenimiento',
+            'dataAlquileres',
+            'ultimasOperaciones'
+        ));
+}
 }

@@ -167,7 +167,7 @@ public function getBatchHistory(Request $request)
         $diff = $lastTime ? $date->diffInMinutes($lastTime, true) : 0;
 
         if ($lastTime && $diff > $minutesGap) {
-            // Save previous batch
+            
             $batches[] = [
                 'start' => $currentBatch[0]->fechaRegistro,
                 'end' => end($currentBatch)->fechaRegistro,
@@ -190,7 +190,6 @@ public function getBatchHistory(Request $request)
         ];
     }
 
-    // Map output to English keys
     $batches = array_map(function ($batch) {
         return [
             'start' => $batch['start'],
@@ -212,14 +211,12 @@ public function getBatchHistory(Request $request)
     return response()->json($batches, 200);
 }
 
-// Similar changes para obtenerDetalleLote y compararLotes
 public function getBatchDetail($id, Request $request)
 {
     $seed = Semilla::where('idUsuario', $request->user()->id)
         ->where('id', $id)
         ->firstOrFail();
 
-    // Map to English keys
     return response()->json([
         'id' => $seed->id,
         'color' => $seed->color,
@@ -241,7 +238,6 @@ public function compareBatches(Request $request)
         ->where('idUsuario', $request->user()->id)
         ->get();
 
-    // Map to English
     $seeds = $seeds->map(function ($seed) {
         return [
             'id' => $seed->id,
@@ -264,7 +260,6 @@ public function exportBatch(Request $request, $format)
         return response()->json(['error' => 'Missing start or end parameters'], 400);
     }
 
-    // Get all seeds of the user in the given range
     $batch = Semilla::where('idUsuario', $request->user()->id)
         ->whereBetween('fechaRegistro', [$start, $end])
         ->get();
@@ -273,7 +268,6 @@ public function exportBatch(Request $request, $format)
         return response()->json(['error' => 'No seeds found in this range'], 404);
     }
 
-    // --- CSV export ---
     if ($format === 'csv') {
         $csv = "Color,Size,Weight,Status,Registration Date\n";
         foreach ($batch as $seed) {
@@ -286,9 +280,7 @@ public function exportBatch(Request $request, $format)
         ]);
     }
 
-    // --- PDF export ---
     if ($format === 'pdf') {
-        // Map seeds to English keys
         $batchMapped = $batch->map(function($seed) {
             return [
                 'color' => $seed->color,
@@ -299,7 +291,6 @@ public function exportBatch(Request $request, $format)
             ];
         });
 
-        // Ensure the view exists and pass the mapped data
         if (!view()->exists('exports.batch')) {
             return response()->json(['error' => 'PDF view not found'], 500);
         }

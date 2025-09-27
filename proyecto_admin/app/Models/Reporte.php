@@ -12,7 +12,6 @@ class Reporte extends Model
     protected $fillable = [
         'idUsuario',
         'tipo_reporte',
-        'descripcion',
         'fechaRegistro',
         'fechaActualizacion'
     ];

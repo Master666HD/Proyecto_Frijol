@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-     <title>Frijol Pairumani</title>
+     <title>FrijolTech</title>
          <link rel="icon" href="img/core-img/favicon.ico">  
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
 </head>
@@ -57,10 +57,6 @@
                         <div class="mb-3">
                             <label for="usuario" class="form-label">Usuario:</label>
                             <input type="text" id="usuario" name="usuario" class="form-control" value="{{ $usuarios->usuario }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="contrasenia" class="form-label">Contraseña:</label>
-                            <input type="password" id="contrasenia" name="contrasenia" class="form-control">
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-warning mb-2">Actualizar Usuario</button>

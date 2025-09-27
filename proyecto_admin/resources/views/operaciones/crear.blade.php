@@ -89,17 +89,19 @@
                                 <option value="ALQUILER">ALQUILER</option>
                             </select>
                         </div>
+                      <div class="mb-3" id="estadoField" style="display: none;">
+                        <label class="form-label">Estado:</label>
+                        <select name="estado" class="form-select" required>
+                            <option value="ACTIVO">ACTIVO</option>
+                            <option value="FINALIZADO">FINALIZADO</option>
+                        </select>
+                    </div>
                         <div class="mb-3">
                             <label class="form-label">Precio Bs.</label>
                             <input type="text" name="precio" class="form-control" required>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Estado:</label>
-                            <select name="estado" class="form-select" required>
-                                <option value="ACTIVO">ACTIVO</option>
-                                <option value="FINALIZADO">FINALIZADO</option>
-                            </select>
-                        </div>
+                        
+
                         <div class="mb-3" id="fechaDevolucionField" style="display: none;">
                             <label class="form-label">Fecha de Devolución:</label>
                             <input type="date" name="fechaDevolucion" class="form-control" id="inputFechaDevolucion">
@@ -118,19 +120,27 @@
         </div>
     </div>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
-    <script>
+        <script>
         const tipoOperacion = document.getElementById('tipoOperacion');
         const fechaDevolucionField = document.getElementById('fechaDevolucionField');
         const observacionesField = document.getElementById('observacionesField');
+        const estadoField = document.getElementById('estadoField');
+        const inputFechaDevolucion = document.getElementById('inputFechaDevolucion');
+        const inputEstado = document.getElementById('inputEstado');
+
         tipoOperacion.addEventListener('change', () => {
             if (tipoOperacion.value === 'ALQUILER') {
                 fechaDevolucionField.style.display = 'block';
                 observacionesField.style.display = 'block';
-                document.getElementById('inputFechaDevolucion').setAttribute('required', true);
+                estadoField.style.display = 'block';
+                inputFechaDevolucion.setAttribute('required', true);
+                inputEstado.setAttribute('required', true);
             } else {
                 fechaDevolucionField.style.display = 'none';
                 observacionesField.style.display = 'none';
-                document.getElementById('inputFechaDevolucion').removeAttribute('required');
+                estadoField.style.display = 'none';
+                inputFechaDevolucion.removeAttribute('required');
+                inputEstado.removeAttribute('required');
             }
         });
         document.addEventListener('DOMContentLoaded', () => {

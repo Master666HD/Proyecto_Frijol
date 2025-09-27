@@ -10,7 +10,7 @@ class ReporteController extends Controller
 {
        public function index()
     {
-        $usuarios = Usuario::all();
+        $usuarios = Usuario::where('rol','Agricultor')->get();
         return view('reportes.index', compact('usuarios'));
     }
 
@@ -18,7 +18,6 @@ class ReporteController extends Controller
 {
     $request->validate([
         'idUsuario' => 'required|exists:usuarios,id',
-        'descripcion' => 'nullable|string|max:255'
     ]);
     
     $usuario_id = $request->input('idUsuario');
@@ -33,16 +32,14 @@ class ReporteController extends Controller
         
     $reporte = Reporte::create([
         'idUsuario' => $usuario->id,
-        'tipo_reporte' => 'Semillas clasificadas por usuario',
-        'descripcion' => $request->descripcion ?? 'Reporte de semillas del usuario ' . $usuario->nombres,
+        'tipo_reporte' => 'Semillas clasificadas por usuario'
     ]);
 
     $pdf = Pdf::loadView('reportes.reporte_usuario', [
         'usuario' => $usuario,
         'aptas' => $aptas,
-        'no_aptas' => $no_aptas,
-        'descripcion' => $request->descripcion
-    ]);
+        'no_aptas' => $no_aptas
+        ]);
 
     return $pdf->download('reporte_usuario_'.$usuario->nombres.'.pdf');
 }
@@ -53,7 +50,6 @@ class ReporteController extends Controller
             'idUsuario' => 'required|exists:usuarios,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'descripcion' => 'nullable|string|max:255'
         ]);
 
         $usuario = Usuario::findOrFail($request->idUsuario);
@@ -65,15 +61,13 @@ class ReporteController extends Controller
         $reporte = Reporte::create([
             'idUsuario' => $usuario->id,
             'tipo_reporte' => 'Semillas por Fechas',
-            'descripcion' => $request->descripcion ?? 'Reporte sin descripción',
         ]);
 
         $pdf = Pdf::loadView('reportes.reporte_fechas', [
             'usuario' => $usuario,
             'semillas' => $semillas,
             'start' => $request->start_date,
-            'end' => $request->end_date,
-            'descripcion' => $request->descripcion
+            'end' => $request->end_date
         ]);
 
         return $pdf->download('reporte_fechas_'.$usuario->nombres.'.pdf');

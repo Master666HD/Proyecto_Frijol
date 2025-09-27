@@ -1,5 +1,3 @@
-<!-- resources/views/reportes/reporte_usuario.blade.php -->
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -61,7 +59,7 @@
         @if(!empty($descripcion))
             <p><strong>Descripción:</strong> {{ $descripcion }}</p>
         @endif
-        <p><strong>Fecha de Generación:</strong> {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}</p>
+        <p><strong>Fecha de Generación:</strong> {{ \Carbon\Carbon::now()->setTimezone('America/La_Paz')->format('d/m/Y H:i') }} </p>
     </div>
 
     <table>

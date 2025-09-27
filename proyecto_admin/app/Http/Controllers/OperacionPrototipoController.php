@@ -20,50 +20,52 @@ class OperacionPrototipoController extends Controller
     
     public function create()
     {
-        $usuarios = Usuario::all();
+        $usuarios = Usuario::where('rol','Agricultor')->get();
         $prototipos = Prototipo::all();
         return view('operaciones.crear', compact('usuarios', 'prototipos'));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'idUsuario' => 'required|exists:usuarios,id',
-            'idPrototipo' => 'required|exists:prototipos,id',
-            'tipoOperacion' => 'required|in:VENTA,ALQUILER',
-            'precio' => 'required|numeric',
-            'estado' => 'required|string',
-            'observaciones' => 'nullable|string',
-            'fechaDevolucion' => $request->tipoOperacion == 'ALQUILER' ? 'required|date' : 'nullable|date',
+
+public function store(Request $request)
+{
+    $request->validate([
+        'idUsuario' => 'required|exists:usuarios,id',
+        'idPrototipo' => 'required|exists:prototipos,id',
+        'tipoOperacion' => 'required|in:VENTA,ALQUILER',
+        'precio' => 'required|numeric',
+        'estado' => 'required|string',
+        'observaciones' => 'nullable|string',
+        'fechaDevolucion' => $request->tipoOperacion == 'ALQUILER' ? 'required|date' : 'nullable|date',
+    ]);
+
+    DB::beginTransaction();
+    try {
+        $estado = $request->tipoOperacion == 'VENTA' ? 'FINALIZADO' : $request->estado;
+
+        $operacion = OperacionPrototipo::create([
+            'idUsuario' => $request->idUsuario,
+            'idPrototipo' => $request->idPrototipo,
+            'tipoOperacion' => $request->tipoOperacion,
+            'precio' => $request->precio,
+            'estado' => $estado,
+            'fechaRegistro' => now(),
+            'fechaDevolucion' => $request->tipoOperacion == 'ALQUILER' ? $request->fechaDevolucion : null,
         ]);
 
-        DB::beginTransaction();
-        try {
-            $operacion = OperacionPrototipo::create([
-                'idUsuario' => $request->idUsuario,
-                'idPrototipo' => $request->idPrototipo,
-                'tipoOperacion' => $request->tipoOperacion,
-                'precio' => $request->precio,
-                'estado' => $request->estado,
-                'fechaRegistro' => now(),
-                'fechaDevolucion' => $request->tipoOperacion == 'ALQUILER' ? $request->fechaDevolucion : null,
+        if ($request->tipoOperacion == 'ALQUILER') {
+            DevolucionPrototipo::create([
+                'idOperacion' => $operacion->id,
+                'fechaDevolucion' => $request->fechaDevolucion,
+                'observaciones' => $request->observaciones ?? null,
             ]);
-
-            if ($request->tipoOperacion == 'ALQUILER') {
-                DevolucionPrototipo::create([
-                    'idOperacion' => $operacion->id,
-                    'fechaDevolucion' => $request->fechaDevolucion,
-                    'observaciones' => $request->observaciones ?? null,
-                ]);
-            }
-            DB::commit();
-            return redirect()->route('operacion.create')->with('success', 'Operación registrada exitosamente.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->route('operacion.create')->with('error', 'Error al registrar la operación: ' . $e->getMessage());
         }
-
+        DB::commit();
+        return redirect()->route('operacion.create')->with('success', 'Operación registrada exitosamente.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return redirect()->route('operacion.create')->with('error', 'Error al registrar la operación: ' . $e->getMessage());
     }
+}
     public function show(string $id)
     {
         

@@ -10,10 +10,9 @@ class Reporte extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'idUsuario',
+        'idOperacion',
         'tipo_reporte',
-        'fechaRegistro',
-        'fechaActualizacion'
+        'fechaRegistro'
     ];
 
     public function usuario()

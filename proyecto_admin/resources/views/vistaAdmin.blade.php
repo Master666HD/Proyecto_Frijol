@@ -81,7 +81,7 @@
     <div class="row">
         <div class="col-md-6">
             <div class="card shadow-sm mb-4">
-                <div class="card-header fs-5">Distribución de Máquinas</div>
+                <div class="card-header fs-5">Maquinas Ocupadas o Vendidas</div>
                 <div class="card-body">
                     <canvas id="prototiposChart"></canvas>
                 </div>
@@ -95,6 +95,14 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header fs-5">Distribución de Máquinas (Disponibles)</div>
+            <div class="card-body">
+                <canvas id="prototiposDisponiblesChart"></canvas>
+            </div>
+        </div>
+    </div>
     </div>
 
  <div class="card shadow-sm mb-4" style="background-color: #1b1f24; color: #e0e0e0;">
@@ -156,15 +164,46 @@
 {{-- Scripts --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    const ctxDisponibles = document.getElementById('prototiposDisponiblesChart');
+    new Chart(ctxDisponibles, {
+        type: 'pie',
+        data: {
+            labels: ['Para Alquilar', 'Para Vender', 'Mantenimiento'],
+            datasets: [{
+                data: [
+                    {{ $prototiposParaAlquilar }},
+                    {{ $prototiposParaVender }},
+                    {{ $prototiposMantenimiento }}
+                ],
+                backgroundColor: ['#00bfff', '#00ff88', '#ffc107'],
+                borderColor: '#121212',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    labels: { color: '#fff', font: { size: 14 } }
+                },
+                title: {
+                    display: true,
+                    text: 'Prototipos Disponibles',
+                    color: '#00ff88',
+                    font: { size: 18, weight: 'bold' }
+                }
+            }
+        }
+    });
+    
     // Gráfico de Prototipos
     const ctx1 = document.getElementById('prototiposChart');
     new Chart(ctx1, {
         type: 'pie',
         data: {
-            labels: ['Disponibles', 'Vendidos', 'Alquilados'],
+            labels: [ 'Vendidos', 'Alquilados'],
             datasets: [{
-                data: [{{ $prototiposDisponibles }}, {{ $prototiposVendidos }}, {{ $prototiposAlquilados }}],
-                backgroundColor: ['#00ff88', '#ff4d4d', '#00bfff'],
+                data: [{{ $prototiposVendidos }}, {{ $prototiposAlquilados }}],
+                backgroundColor: ['#00ff88', '#ff4d4d'],
                 borderColor: '#121212',
                 borderWidth: 2
             }]

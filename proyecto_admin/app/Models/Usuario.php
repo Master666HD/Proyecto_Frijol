@@ -65,7 +65,7 @@ class Usuario extends Authenticatable
    public function toEnglishResponse()
 {
     return [
-        'id'        => $this->idUsuario,   // 👈 usar la PK real
+        'id'        => $this->idUsuario,   
         'firstName' => $this->nombres,
         'lastName'  => $this->apellidos,
         'email'     => $this->correo,

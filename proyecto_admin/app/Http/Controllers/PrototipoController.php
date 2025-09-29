@@ -24,6 +24,7 @@ class PrototipoController extends Controller
             'nombre' => 'required|string|max:255',
             'estado' => 'required|integer',
             'precio' => 'required|numeric',
+            'observaciones' => 'nullable|string|max:250',
         ]);
 
         $ultimo = Prototipo::orderBy('id', 'desc')->first();
@@ -43,6 +44,7 @@ class PrototipoController extends Controller
             'prototipos.*.nombre' => 'required|string|max:255',
             'prototipos.*.estado' => 'required|integer',
             'prototipos.*.precio' => 'required|numeric',
+            'prototipos.*.observaciones' => $request->estado == 3 ? 'required|string|max:250' : 'nullable|string|max:250',
         ]);
 
         $ultimo = Prototipo::orderBy('id', 'desc')->first();
@@ -55,6 +57,7 @@ class PrototipoController extends Controller
                 'serial' => 'PTF-' . $numero++,
                 'estado' => $proto['estado'],
                 'precio' => $proto['precio'],
+                'observaciones' => $proto['observaciones'] ?? null,
             ];
         }
 
@@ -79,9 +82,15 @@ class PrototipoController extends Controller
             'nombre' => 'required|string|max:255',
             'estado' => 'required|integer',
             'precio' => 'required|numeric',
+            'observaciones' => $request->estado == 3 ? 'required|string|max:250' : 'nullable|string|max:250',
         ]);
 
-        $prototipo = Prototipo::findOrFail($id);
+         $prototipo = Prototipo::findOrFail($id);
+         
+        if ($request->estado != 3) {
+            $request->merge(['observaciones' => null]);
+        }
+       
         $prototipo->update($request->all());
         return redirect()->route('prototipos.index')->with('success', 'Prototipo actualizado exitosamente.');
     }

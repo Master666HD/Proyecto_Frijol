@@ -14,6 +14,7 @@ class Prototipo extends Model
         'serial',
         'estado',
         'precio',
+        'observaciones',
         'fechaRegistro'
     ];
 

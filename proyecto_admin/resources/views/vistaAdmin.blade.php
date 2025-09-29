@@ -39,7 +39,6 @@
 </style>
 
 <div class="container mt-4">
-    <h1 class="mb-4 text-center">Dashboard de Operaciones</h1>
 
     {{-- KPIs principales --}}
     <div class="row text-center mb-4">

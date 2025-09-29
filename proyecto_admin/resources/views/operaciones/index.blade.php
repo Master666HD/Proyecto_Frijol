@@ -49,11 +49,28 @@
     <div class="card shadow-sm mb-4" style="background-color: #1b1f24; color: #e0e0e0;">
         <div class="card-header d-flex justify-content-between align-items-center fs-5">
             Lista de Operaciones
-            <a href="{{ route('operaciones.create') }}" class="btn btn-primary mb-3">
+            <button class="btn btn-primary mb-3" @if(!$prototiposDisponibles) data-bs-toggle="modal"
+            data-bs-target="#noDisponibleModal" @else onclick="window.location='{{ route('operaciones.create') }}'"
+                @endif>
                 Registrar nueva operación
-            </a>
+            </button>
         </div>
-        {{-- Botón para registrar nueva operación --}}
+        <div class="modal fade" id="noDisponibleModal" tabindex="-1" aria-labelledby="noDisponibleLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-dark text-white">
+                        <h5 class="modal-title" id="noDisponibleLabel">¡Atención!</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <strong>NO TIENES MÁQUINAS DISPONIBLES</strong>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Aceptar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div>
             <table class="table table-hover align-middle mb-0">

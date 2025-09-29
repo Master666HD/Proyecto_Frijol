@@ -15,8 +15,8 @@ class OperacionPrototipoController extends Controller
     public function index()
     {
         $operaciones = OperacionPrototipo::with(['usuario', 'prototipo'])->get();
-
-        return view('operaciones.index', compact('operaciones'));
+       $prototiposDisponibles = Prototipo::whereIn('estado', [1, 2])->exists();
+        return view('operaciones.index', compact('operaciones', 'prototiposDisponibles'));
     }
 
     public function create()

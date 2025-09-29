@@ -113,20 +113,30 @@
         </div>
       </div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let formToSubmit = null;
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    formToSubmit = this.closest('form');
-                    const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
-                    modal.show();
-                });
-            });
-            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-                if(formToSubmit) formToSubmit.submit();
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let formToSubmit = null;
+        let modalInstance = null;
+
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                formToSubmit = this.closest('form');
+                modalInstance = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+                modalInstance.show();
             });
         });
-    </script>
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+            if(formToSubmit) formToSubmit.submit();
+            if(modalInstance) modalInstance.hide();
+        });
+
+        document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if(modalInstance) modalInstance.hide();
+            });
+        });
+    });
+</script>
 @endsection

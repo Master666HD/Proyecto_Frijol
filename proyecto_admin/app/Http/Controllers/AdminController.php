@@ -13,17 +13,14 @@ class AdminController extends Controller
 {
     public function index()
     {
-         // 📌 KPI’s generales
         $totalOperaciones = OperacionPrototipo::count();
         $totalVentas = OperacionPrototipo::where('tipoOperacion', 'venta')->count();
         $totalAlquileres = OperacionPrototipo::where('tipoOperacion', 'alquiler')->count();
 
-        // 💰 Ingresos totales
         $ingresosTotales = OperacionPrototipo::sum('precio');
         $ingresosVentas = OperacionPrototipo::where('tipoOperacion', 'venta')->sum('precio');
         $ingresosAlquileres = OperacionPrototipo::where('tipoOperacion', 'alquiler')->sum('precio');
 
-        // 📊 Estado de prototipos (para gráfico de pastel)
         $prototiposParaAlquilar = Prototipo::where('estado', 1)->count();
         $prototiposParaVender = Prototipo::where('estado', 2)->count();
         $prototiposMantenimiento = Prototipo::where('estado', 3)->count();
@@ -33,7 +30,6 @@ class AdminController extends Controller
 
      
 
-        // 🗓️ Gráfico de barras (operaciones por mes)
         $operacionesPorMes = OperacionPrototipo::select(
                 DB::raw('MONTH(fechaRegistro) as mes'),
                 DB::raw('SUM(CASE WHEN tipoOperacion = "venta" THEN 1 ELSE 0 END) as ventas'),
@@ -43,7 +39,6 @@ class AdminController extends Controller
             ->orderBy('mes')
             ->get();
 
-        // Etiquetas de los meses
         $labelsMeses = $operacionesPorMes->map(function ($op) {
             return Carbon::create()->month($op->mes)->locale('es')->monthName;
         });
@@ -51,7 +46,6 @@ class AdminController extends Controller
         $dataVentas = $operacionesPorMes->pluck('ventas');
         $dataAlquileres = $operacionesPorMes->pluck('alquileres');
 
-        // 📋 Últimas operaciones
         $ultimasOperaciones = OperacionPrototipo::with(['usuario', 'prototipo'])
             ->orderBy('fechaRegistro', 'desc')
             ->take(5)

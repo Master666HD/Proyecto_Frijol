@@ -9,7 +9,7 @@ class UserController extends Controller
     
     public function index()
     {
-        $usuarios = Usuario::all();
+        $usuarios = Usuario::where('estado', 1)->where('rol', 'Agricultor')->get();
 
     return view('usuarios.vistaUsuarios', compact('usuarios'));
     }
@@ -103,11 +103,13 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        // Eliminar el usuario por ID
-        $usuarios = Usuario::findOrFail($id);
-        $usuarios->delete();
-        return redirect()->route('usuarios.index')->with('success', 'Usuario eliminado exitosamente.');
-    }
+
+public function destroy(string $id)
+{
+    // Cambiar el estado del usuario a 0 (inactivo)
+    $usuario = Usuario::findOrFail($id);
+    $usuario->estado = 0;
+    $usuario->save();
+    return redirect()->route('usuarios.index')->with('success', 'Usuario eliminado exitosamente.');
+}
 }

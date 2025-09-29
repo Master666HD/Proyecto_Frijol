@@ -13,7 +13,15 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'role:Admin'])->group(function () {
     Route::resource('usuarios', UserController::class);
-    Route::resource('operacion', OperacionPrototipoController::class);
+    Route::resource('operaciones', OperacionPrototipoController::class);
+Route::get('/operaciones', [OperacionPrototipoController::class, 'index'])->name('operacion.index');
+
+Route::get('/operaciones/create', [OperacionPrototipoController::class, 'create'])->name('operaciones.create');
+Route::post('/operaciones', [OperacionPrototipoController::class, 'store'])->name('operaciones.store');
+
+Route::get('/operaciones/{id}/devolucion', [OperacionPrototipoController::class, 'formDevolucion'])->name('operaciones.devolucion.form');
+Route::post('/operaciones/{id}/devolucion', [OperacionPrototipoController::class, 'registrarDevolucion'])->name('operacion.devolucion.store');
+
     Route::get('/reportes', [ReporteController::class, 'vistaReportes'])->name('vistaReportes');    
     Route::get('/admin', [AdminController::class, 'index'])->name('vistaAdmin');
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');

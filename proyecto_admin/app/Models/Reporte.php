@@ -15,9 +15,9 @@ class Reporte extends Model
         'fechaRegistro'
     ];
 
-    public function usuario()
+    public function operacion()
     {
-        return $this->belongsTo(Usuario::class, 'idUsuario');
+        return $this->belongsTo(OperacionPrototipo::class, 'idOperacion');
     }
 }
 

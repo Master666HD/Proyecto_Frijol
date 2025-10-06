@@ -1,75 +1,127 @@
 <?php
+
 namespace App\Http\Controllers;
-    use Illuminate\Http\Request;
-    use App\Models\Usuario;
-    use App\Models\Semilla;
-    use App\Models\Reporte;
-    use Barryvdh\DomPDF\Facade\Pdf;
+
+use Illuminate\Http\Request;
+use App\Models\OperacionPrototipo;
+use App\Models\Prototipo;
+use App\Models\Reporte;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class ReporteController extends Controller
 {
-       public function index()
+    // Vista inicial para elegir el reporte
+    public function index()
     {
-        $usuarios = Usuario::where('rol','Agricultor')->get();
-        return view('reportes.index', compact('usuarios'));
+        return view('reportes.index');
     }
 
-  public function reporteUsuario(Request $request)
-{
-    $request->validate([
-        'idUsuario' => 'required|exists:usuarios,id',
-    ]);
-    
-    $usuario_id = $request->input('idUsuario');
-    $usuario = Usuario::findOrFail($usuario_id);
-
-    $aptas = Semilla::where('idUsuario', $usuario_id)
-        ->where('estado', 'APTO')
-        ->count();
-    $no_aptas = Semilla::where('idUsuario', $usuario_id)
-        ->where('estado', 'NO APTO')
-        ->count();
-        
-    $reporte = Reporte::create([
-        'idUsuario' => $usuario->id,
-        'tipo_reporte' => 'Semillas clasificadas por usuario'
-    ]);
-
-    $pdf = Pdf::loadView('reportes.reporte_usuario', [
-        'usuario' => $usuario,
-        'aptas' => $aptas,
-        'no_aptas' => $no_aptas
-        ]);
-
-    return $pdf->download('reporte_usuario_'.$usuario->nombres.'.pdf');
-}
-
-    public function generarPorFechas(Request $request)
+    // Reporte de facturación por ALQUILER
+    public function reporteAlquiler(Request $request)
     {
-        $request->validate([
-            'idUsuario' => 'required|exists:usuarios,id',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+        $inicio = $request->input('inicio');
+        $fin = $request->input('fin');
+
+        $query = OperacionPrototipo::whereRaw('LOWER(tipoOperacion) = ?', ['alquiler']);
+
+        if ($inicio && $fin) {
+            $inicio = Carbon::parse($inicio)->startOfDay();
+            $fin = Carbon::parse($fin)->endOfDay();
+            $query->whereBetween('fechaRegistro', [$inicio, $fin]);
+        }
+
+        $operaciones = $query->get();
+        $total = $query->sum('precio');
+
+        // Guardar reporte
+        $reporte = Reporte::create([
+            'idOperacion' => null,
+            'tipo_reporte' => 'facturacion_alquiler',
+            'fechaRegistro' => Carbon::now()
         ]);
 
-        $usuario = Usuario::findOrFail($request->idUsuario);
+        $pdf = Pdf::loadView('reportes.reporteAlquiler', [
+            'operaciones' => $operaciones,
+            'total' => $total,
+            'inicio' => $inicio ? $inicio->format('Y-m-d') : null,
+            'fin' => $fin ? $fin->format('Y-m-d') : null,
+        ]);
 
-        $semillas = Semilla::where('idUsuario', $usuario->id)
-            ->whereBetween('fechaRegistro', [$request->start_date, $request->end_date])
-            ->get();
+        return $pdf->download("reporte_alquiler_{$reporte->id}.pdf");
+    }
+
+    // Reporte de facturación por VENTA
+    public function reporteVenta(Request $request)
+    {
+        $inicio = $request->input('inicio');
+        $fin = $request->input('fin');
+
+        $query = OperacionPrototipo::whereRaw('LOWER(tipoOperacion) = ?', ['venta']);
+
+        if ($inicio && $fin) {
+            $inicio = Carbon::parse($inicio)->startOfDay();
+            $fin = Carbon::parse($fin)->endOfDay();
+            $query->whereBetween('fechaRegistro', [$inicio, $fin]);
+        }
+
+        $operaciones = $query->get();
+        $total = $query->sum('precio');
 
         $reporte = Reporte::create([
-            'idUsuario' => $usuario->id,
-            'tipo_reporte' => 'Semillas por Fechas',
+            'idOperacion' => null,
+            'tipo_reporte' => 'facturacion_venta',
+            'fechaRegistro' => Carbon::now()
         ]);
 
-        $pdf = Pdf::loadView('reportes.reporte_fechas', [
-            'usuario' => $usuario,
-            'semillas' => $semillas,
-            'start' => $request->start_date,
-            'end' => $request->end_date
+        $pdf = Pdf::loadView('reportes.reporteVenta', [
+            'operaciones' => $operaciones,
+            'total' => $total,
+            'inicio' => $inicio ? $inicio->format('Y-m-d') : null,
+            'fin' => $fin ? $fin->format('Y-m-d') : null,
         ]);
 
-        return $pdf->download('reporte_fechas_'.$usuario->nombres.'.pdf');
+        return $pdf->download("reporte_venta_{$reporte->id}.pdf");
     }
-}   
+
+    // Reporte de prototipos en MANTENIMIENTO
+    public function reporteMantenimiento()
+    {
+        // Prototipos que están en mantenimiento (estado = 3)
+        $prototipos = Prototipo::where('estado', 3)->get();
+
+        // Guardamos en la tabla reportes
+        $reporte = Reporte::create([
+            'idOperacion' => null,
+            'tipo_reporte' => 'mantenimiento',
+            'fechaRegistro' => Carbon::now()
+        ]);
+
+        // Generamos el PDF
+        $pdf = Pdf::loadView('reportes.reporteMantenimiento', [
+            'prototipos' => $prototipos
+        ]);
+
+        return $pdf->download("reporte_mantenimiento_{$reporte->id}.pdf");
+    }
+
+
+    // Reporte de STOCK (prototipos disponibles)
+    public function reporteStock()
+    {
+        // Por ejemplo, estado 1 = disponible para alquilar, 2 = disponible para vender
+        $prototipos = Prototipo::whereIn('estado', [1, 2])->get();
+
+        $reporte = Reporte::create([
+            'idOperacion' => null,
+            'tipo_reporte' => 'stock',
+            'fechaRegistro' => Carbon::now()
+        ]);
+
+        $pdf = Pdf::loadView('reportes.reporteStock', [
+            'prototipos' => $prototipos
+        ]);
+
+        return $pdf->download("reporte_stock_{$reporte->id}.pdf");
+    }
+}

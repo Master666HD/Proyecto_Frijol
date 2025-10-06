@@ -24,11 +24,16 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
     Route::get('/operaciones/{id}/devolucion', [OperacionPrototipoController::class, 'formDevolucion'])->name('operaciones.devolucion.form');
     Route::post('/operaciones/{id}/devolucion', [OperacionPrototipoController::class, 'registrarDevolucion'])->name('operacion.devolucion.store');
 
-    Route::get('/reportes', [ReporteController::class, 'vistaReportes'])->name('vistaReportes');
     Route::get('/admin', [AdminController::class, 'index'])->name('vistaAdmin');
+
+
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
-    Route::get('/reportes/usuario/pdf', [ReporteController::class, 'reporteUsuario'])->name('reportes.usuario.pdf');
-    Route::get('/reportes/fechas/pdf', [ReporteController::class, 'generarPorFechas'])->name('reportes.fechas.pdf');
+
+    Route::post('/reportes/alquiler', [ReporteController::class, 'reporteAlquiler'])->name('reportes.alquiler');
+    Route::post('/reportes/venta', [ReporteController::class, 'reporteVenta'])->name('reportes.venta');
+    Route::post('/reportes/stock', [ReporteController::class, 'reporteStock'])->name('reportes.stock');
+    Route::post('/reportes/mantenimiento', [ReporteController::class, 'reporteMantenimiento'])->name('reportes.mantenimiento');
+
 
 });
 

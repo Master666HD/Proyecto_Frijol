@@ -19,10 +19,6 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="{{ asset('/style.css') }}">
-
-    <!-- Imágenes -->
-
-
 </head>
 
 <body>
@@ -99,7 +95,7 @@
 
 
     <!-- ##### Footer Area Start ##### -->
-    <footer class="footer-area bg-img" style="background-image: url(img/bg-img/3.jpg);">
+  <footer class="footer-area bg-img" style="background-image: url('{{ asset('img/bg-img/3.jpg') }}');">
         <!-- Main Footer Area -->
         <div class="main-footer-area">
             <div class="container">
@@ -108,7 +104,7 @@
                     <div class="col-12 col-sm-6 col-lg-3">
                         <div class="single-footer-widget">
                             <div class=" footer-logo mb-30">
-                            <a href="{{route('vistaAdmin')}}"><img src="img/core-img/logo4.png" alt=""></a>
+                            <a href="{{route('vistaAdmin')}}"><img src="{{ asset('img/core-img/logo4.png')}}" alt=""></a>
                         </div>
                         <p>Este página está hecho para la administración de los agricultores y proceso de clasificación
                             de frijoles.</p>
@@ -117,7 +113,7 @@
 
             </div>
         </div>
-        </div>
+    </div>
 
 
     </footer>

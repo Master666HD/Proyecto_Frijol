@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar Operación</title>
+    <title>FrijolTech</title>
     <link rel="icon" href="{{ asset('img/core-img/favicon.ico') }}">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
     <style>

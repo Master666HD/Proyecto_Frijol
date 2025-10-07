@@ -19,7 +19,6 @@
                 <th>Serial</th>
                 <th>Precio (Bs)</th>
                 <th>Observaciones</th>
-                <th>Fecha Registro</th>
             </tr>
         </thead>
         <tbody>
@@ -30,11 +29,10 @@
                     <td>{{ $prototipo->serial }}</td>
                     <td>{{ number_format($prototipo->precio, 2) }}</td>
                     <td>{{ $prototipo->observaciones ?? '---' }}</td>
-                    <td>{{ \Carbon\Carbon::parse($prototipo->fechaRegistro)->format('Y/m/d') }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6">No hay prototipos en mantenimiento.</td>
+                    <td colspan="5">No hay prototipos en mantenimiento.</td>
                 </tr>
             @endforelse\
         </tbody>

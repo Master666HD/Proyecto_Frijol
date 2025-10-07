@@ -8,20 +8,22 @@
     <title>FrijolTech</title>
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
 </head>
-    <style>
-        body {
-            background-image: url('{{ asset('img/fondo-devolucion.jpg') }}');
-            background-size: cover;     
-            background-position: center;
-            min-height: 100vh;
-        }
-        .card {
-            background-color: rgba(60, 60, 60, 0.8); 
-            color: white; 
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
-        }
-    </style>
+<style>
+    body {
+        background-image: url('{{ asset('img/fondo-devolucion.jpg') }}');
+        background-size: cover;
+        background-position: center;
+        min-height: 100vh;
+    }
+
+    .card {
+        background-color: rgba(60, 60, 60, 0.8);
+        color: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+</style>
+
 <body>
     <div class="container">
         <div class="card shadow p-4 mt-5">
@@ -29,7 +31,14 @@
 
             <p><strong>Agricultor:</strong> {{ $operacion->usuario->nombres }} {{ $operacion->usuario->apellidos }}</p>
             <p><strong>Prototipo:</strong> {{ $operacion->prototipo->nombre }}</p>
-            <p><strong>Fecha de registro:</strong> {{ $operacion->fechaRegistro }}</p>
+            <p><strong>Fecha de devolución actual:</strong>
+                {{ \Carbon\Carbon::parse($devolucion->fechaDevolucion)->format('d/m/Y') }}
+            </p>
+
+            <p><strong>Fecha de registro:</strong>
+                {{ \Carbon\Carbon::parse($operacion->fechaRegistro)->format('d/m/Y') }}
+            </p>
+
 
             <form action="{{ route('operaciones.devolucion.form', $operacion->id) }}" method="POST">
                 @csrf
@@ -53,7 +62,7 @@
                 </div>
                 <div class="d-grid">
                     <button type="submit" class="btn btn-primary">Registrar devolución</button>
-                    <a href="{{ route('operacion.index') }}" class="btn btn-secondary mt-2">Cancelar</a>
+                    <a href="{{ route('operaciones.index') }}" class="btn btn-secondary mt-2">Cancelar</a>
                 </div>
 
             </form>

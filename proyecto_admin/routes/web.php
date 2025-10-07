@@ -15,14 +15,13 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
     Route::resource('usuarios', UserController::class);
     Route::resource('prototipos', PrototipoController::class);
     Route::resource('operaciones', OperacionPrototipoController::class);
-    Route::get('/operaciones', [OperacionPrototipoController::class, 'index'])->name('operacion.index');
-
-    Route::post('prototipos/store-multiple', [PrototipoController::class, 'storeMultiple'])->name('prototipos.storeMultiple');
-    Route::get('/operaciones/create', [OperacionPrototipoController::class, 'create'])->name('operaciones.create');
-    Route::post('/operaciones', [OperacionPrototipoController::class, 'store'])->name('operaciones.store');
-
     Route::get('/operaciones/{id}/devolucion', [OperacionPrototipoController::class, 'formDevolucion'])->name('operaciones.devolucion.form');
     Route::post('/operaciones/{id}/devolucion', [OperacionPrototipoController::class, 'registrarDevolucion'])->name('operacion.devolucion.store');
+    
+    
+    Route::post('prototipos/store-multiple', [PrototipoController::class, 'storeMultiple'])->name('prototipos.storeMultiple');
+
+
 
     Route::get('/admin', [AdminController::class, 'index'])->name('vistaAdmin');
 

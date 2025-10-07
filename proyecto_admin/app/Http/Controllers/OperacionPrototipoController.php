@@ -14,8 +14,8 @@ class OperacionPrototipoController extends Controller
 
     public function index()
     {
-        $operaciones = OperacionPrototipo::with(['usuario', 'prototipo'])->get();
-       $prototiposDisponibles = Prototipo::whereIn('estado', [1, 2])->exists();
+        $operaciones = OperacionPrototipo::with(['usuario', 'prototipo'])->where('estado', 'ACTIVO')->orWhere('estado', 'FINALIZADO')->get();
+        $prototiposDisponibles = Prototipo::whereIn('estado', [1, 2])->exists();
         return view('operaciones.index', compact('operaciones', 'prototiposDisponibles'));
     }
 
@@ -40,15 +40,11 @@ class OperacionPrototipoController extends Controller
 
         DB::beginTransaction();
         try {
-            $estado = $request->tipoOperacion == 'ALQUILER' ? 'ACTIVO' : 'FINALIZADO';
-
             $operacion = OperacionPrototipo::create([
                 'idUsuario' => $request->idUsuario,
                 'idPrototipo' => $request->idPrototipo,
                 'tipoOperacion' => $request->tipoOperacion,
                 'precio' => $request->precio,
-                'estado' => $estado,
-                'fechaRegistro' => now(),
             ]);
 
             $prototipo = Prototipo::findOrFail($request->idPrototipo);
@@ -67,7 +63,7 @@ class OperacionPrototipoController extends Controller
                 ]);
             }
             DB::commit();
-            return redirect()->route('operacion.index')->with('success', 'Operación registrada exitosamente.');
+            return redirect()->route('operaciones.index')->with('success', 'Operación registrada exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->route('operaciones.create')->with('error', 'Error al registrar la operación: ' . $e->getMessage());
@@ -80,8 +76,9 @@ class OperacionPrototipoController extends Controller
             ->where('tipoOperacion', 'ALQUILER')
             ->where('estado', 'ACTIVO')
             ->firstOrFail();
+        $devolucion = DevolucionPrototipo::where('idOperacion', $id) -> where('fechaDevolucion', '!=', null)->first();
 
-        return view('operaciones.devolucion', compact('operacion'));
+        return view('operaciones.devolucion', compact('operacion', 'devolucion'));
     }
 
     public function registrarDevolucion(Request $request, $id)
@@ -89,7 +86,7 @@ class OperacionPrototipoController extends Controller
         $request->validate([
             'fechaDevolucion' => 'required|date',
             'observaciones' => 'nullable|string',
-            'estadoPrototipo' => 'required|in:1,2,3', 
+            'estadoPrototipo' => 'required|in:1,2,3',
         ]);
 
         DB::beginTransaction();
@@ -106,13 +103,12 @@ class OperacionPrototipoController extends Controller
                 'estado' => 'FINALIZADO'
             ]);
 
-            // Cambiar el estado del prototipo según lo seleccionado
             $prototipo = Prototipo::findOrFail($operacion->idPrototipo);
             $prototipo->estado = $request->estadoPrototipo;
             $prototipo->save();
 
             DB::commit();
-            return redirect()->route('operacion.index')->with('success', 'Devolución actualizada correctamente.');
+            return redirect()->route('operaciones.index')->with('success', 'Devolución actualizada correctamente.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Error al actualizar la devolución: ' . $e->getMessage());
@@ -123,24 +119,104 @@ class OperacionPrototipoController extends Controller
 
     }
 
-    public function edit(string $id)
+    public function edit($id)
     {
-        //
+        $operacion = OperacionPrototipo::findOrFail($id);
+        $usuarios = Usuario::all();
+
+        // Filtrar prototipos disponibles según el tipo de operación
+        if ($operacion->tipoOperacion === 'VENTA') {
+            $prototipos = Prototipo::where('estado', 2)
+                ->orWhere('id', $operacion->idPrototipo) // incluir el actual
+                ->get();
+        } else { // ALQUILER
+            $prototipos = Prototipo::where('estado', 1)
+                ->orWhere('id', $operacion->idPrototipo)
+                ->get();
+        }
+
+        return view('operaciones.edit', compact('operacion', 'usuarios', 'prototipos'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+
+   public function update(Request $request, $id)
+{
+    $operacion = OperacionPrototipo::findOrFail($id);
+
+    $request->validate([
+        'idPrototipo' => 'required|exists:prototipos,id',
+        'estado' => 'required|in:ACTIVO,FINALIZADO,ANULADO',
+        'precio' => 'required|numeric',
+        'idUsuario' => 'required|exists:usuarios,id'
+    ]);
+
+    DB::beginTransaction();
+    try {
+        // Si se cambió el prototipo
+        if ($operacion->idPrototipo != $request->idPrototipo) {
+            $prototipoAnterior = Prototipo::find($operacion->idPrototipo);
+            if ($prototipoAnterior) {
+                // liberar el anterior
+                if ($operacion->tipoOperacion === 'VENTA') {
+                    $prototipoAnterior->estado = 2; // disponible para venta
+                } else {
+                    $prototipoAnterior->estado = 1; // disponible para alquiler
+                }
+                $prototipoAnterior->save();
+            }
+        }
+
+        // Actualizar operación
+        $operacion->update([
+            'idUsuario' => $request->idUsuario,
+            'idPrototipo' => $request->idPrototipo,
+            'precio' => $request->precio,
+            'estado' => $request->estado,
+        ]);
+
+        // Cambiar estado del nuevo prototipo
+        $prototipoNuevo = Prototipo::findOrFail($request->idPrototipo);
+        if ($operacion->tipoOperacion === 'VENTA') {
+            $prototipoNuevo->estado = 4; // vendido
+        } else {
+            $prototipoNuevo->estado = 5; // alquilado
+        }
+        $prototipoNuevo->save();
+
+        DB::commit();
+        return redirect()->route('operaciones.index')->with('success', 'Operación actualizada correctamente.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Error al actualizar: ' . $e->getMessage());
+    }
+}
+
+
+    public function destroy($id)
     {
-        //
+        try {
+            $operacion = OperacionPrototipo::findOrFail($id);
+
+            if ($operacion->estado !== 'ANULADO') {
+
+                $prototipo = Prototipo::findOrFail($operacion->idPrototipo);
+
+                $operacion->estado = 'ANULADO';
+                $operacion->save();
+
+                if ($operacion->tipoOperacion === 'VENTA') {
+                    $prototipo->estado = 2;
+                } elseif ($operacion->tipoOperacion === 'ALQUILER') {
+                    $prototipo->estado = 1;
+                }
+
+                $prototipo->save();
+            }
+
+            return redirect()->route('operaciones.index')->with('success', 'Operación anulada correctamente y prototipo liberado.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al anular la operación: ' . $e->getMessage());
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
 }

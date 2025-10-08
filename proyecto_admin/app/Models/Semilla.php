@@ -10,14 +10,13 @@ class Semilla extends Model
     protected $table = 'semillas';
     public $timestamps = false;
 
-    protected $fillable = 
-    [
+    protected $fillable = [
+        'idUsuario',
+        'idPrototipo',
         'uid',
         'color',
         'tamano',   
         'peso',
-        'idUsuario',
-        'idPrototipo',
         'estado',
         'fechaRegistro'
     ];

@@ -10,8 +10,13 @@ class OperacionPrototipo extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'idUsuario', 'idPrototipo', 'tipoOperacion',
-        'precio', 'estado', 'fechaRegistro', 'fechaDevolucion'
+        'idUsuario',
+        'idPrototipo',
+        'tipoOperacion',
+        'precio',
+        'estado',
+        'fechaRegistro',
+        'fechaActualizacion'    
     ];
 
     public function usuario()

@@ -47,4 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/seeds/compare', [SemillaController::class, 'compareBatches']); 
     Route::get('/seeds/export/{format}', [SemillaController::class, 'exportBatch']); 
 });
+Route::get('/batches/pdf', [SemillaController::class, 'exportBatchHistoryPdf'])
+    ->middleware('auth:sanctum');
+
 

@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -47,7 +48,7 @@ fun WelcomeScreen(
     var visibleIndex by remember { mutableStateOf(0) }
     var showButton by remember { mutableStateOf(false) }
 
-    // 👇 Controlador de barras del sistema
+
     val systemUiController = rememberSystemUiController()
     val backgroundColor = MaterialTheme.colorScheme.primary
 
@@ -83,13 +84,13 @@ fun WelcomeScreen(
             val annotatedText = buildAnnotatedString {
                 if (visibleIndex > 0) {
                     val firstPart = logoText.substring(0, minOf(6, visibleIndex))
-                    pushStyle(SpanStyle(color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold))
+                    pushStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.Bold))
                     append(firstPart)
                     pop()
                 }
                 if (visibleIndex > 6) {
                     val secondPart = logoText.substring(6, visibleIndex)
-                    pushStyle(SpanStyle(color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold))
+                    pushStyle(SpanStyle(color = Color(0xFF18520C), fontWeight = FontWeight.Bold))
                     append(secondPart)
                     pop()
                 }

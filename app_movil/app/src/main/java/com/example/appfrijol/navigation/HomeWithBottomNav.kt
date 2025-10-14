@@ -67,9 +67,9 @@ fun HomeWithBottomNav(
                         selected = currentRoute == item.route,
                         onClick = {
                             navController.navigate(item.route) {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                // Elimina el stack hasta la ruta actual para reiniciar la pantalla
+                                popUpTo(item.route) { inclusive = true }
                                 launchSingleTop = true
-                                restoreState = true
                             }
                         },
                         icon = {
@@ -138,7 +138,7 @@ fun HomeWithBottomNav(
             composable(BottomNavItem.Results.route) { ResultScreen() }
             composable(BottomNavItem.Learning.route) { LearningScreen() }
             composable(BottomNavItem.Profile.route) { ProfileScreen(onLogout) }
-            composable(BottomNavItem.More.route) { MoreScreen() }
+            composable(BottomNavItem.More.route) { MoreScreen(navController = navController) }
         }
     }
 }

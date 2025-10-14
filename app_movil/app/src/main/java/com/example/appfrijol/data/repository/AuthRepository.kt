@@ -12,24 +12,28 @@ class AuthRepository @Inject constructor(
     suspend fun login(request: LoginRequest): Result<LoginResponse> {
         return try {
             val response = api.login(request)
+
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null) {
-
-
-
                     Result.success(body)
                 } else {
                     Result.failure(Exception("Respuesta vacía del servidor"))
                 }
             } else {
-                val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
+                // Aquí interpretamos el código HTTP
+                val errorMsg = when (response.code()) {
+                    401 -> "Usuario o contraseña incorrectos. Intente de nuevo."
+                    403 -> "Acceso denegado. Rol no permitido."
+                    else -> response.errorBody()?.string() ?: "Error desconocido en el servidor."
+                }
                 Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("Error de conexión: ${e.localizedMessage}"))
         }
     }
+
 
     suspend fun logout() {
         dataStoreManager.clearSession() // 👈 borra token, nombre y userId

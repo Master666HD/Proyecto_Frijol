@@ -1,5 +1,6 @@
 package com.example.appfrijol.presentation.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,6 +40,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -50,6 +52,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +65,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -69,13 +73,16 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.appfrijol.presentation.login.LoginViewModel
 import com.example.appfrijol.presentation.session.SessionViewModel
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
+
 fun ProfileScreen(
     onLogout: () -> Unit,
     loginViewModel: LoginViewModel = hiltViewModel()
 ) {
     val sessionViewModel: SessionViewModel = hiltViewModel()
     val userName by sessionViewModel.userName.collectAsState(initial = "Usuario")
+    val email by sessionViewModel.email.collectAsState(initial = "Email")
 
     var showEditNameDialog by remember { mutableStateOf(false) }
     var newName by remember { mutableStateOf(userName) }
@@ -84,7 +91,11 @@ fun ProfileScreen(
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-
+    val errorMessage by sessionViewModel.errorMessage.collectAsState()
+    val attempts by sessionViewModel.passwordAttempts.collectAsState()
+    val isLocked by sessionViewModel.isLocked.collectAsState()
+    val context = LocalContext.current
+    val editNameState by sessionViewModel.editNameState.collectAsState()
     val gradientColors = listOf(
         MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
         MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
@@ -173,30 +184,9 @@ fun ProfileScreen(
                     )
 
                     Text(
-                        text = "$userName@example.com",
+                        text = email,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
-                    )
-                }
-
-                // Botón editar en posición corregida
-                FloatingActionButton(
-                    onClick = {
-                        newName = userName
-                        showEditNameDialog = true
-                    },
-                    modifier = Modifier
-                        .size(56.dp)
-                        .align(Alignment.BottomEnd)
-                        .offset(x = (-16).dp, y = (-8).dp),
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    elevation = FloatingActionButtonDefaults.elevation(8.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = "Editar nombre",
-                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
@@ -286,47 +276,10 @@ fun ProfileScreen(
                         newName = userName
                         showEditNameDialog = true
                     }
-                    ProfileInfoItem("Correo", "$userName@example.com")
-                    ProfileInfoItem("Miembro desde", "Enero 2024")
+                    ProfileInfoItem("Correo", "$email")
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // Consejos de cosecha
-                ProfileCard(
-                    title = "Consejos de Cosecha",
-                    icon = Icons.Default.Lightbulb,
-                    gradientColors = listOf(
-                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
-                        MaterialTheme.colorScheme.surface
-                    )
-                ) {
-                    TipItem("• Cosecha cuando las vainas estén secas y marrones.")
-                    TipItem("• Evita días lluviosos para mejor calidad.")
-                    TipItem("• Seca bien antes de almacenar.")
-                    TipItem("• Revisa regularmente el estado de los granos.")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Manual rápido
-                ProfileCard(
-                    title = "Manual Rápido de Máquina",
-                    icon = Icons.Default.Build,
-                    gradientColors = listOf(
-                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f),
-                        MaterialTheme.colorScheme.surface
-                    )
-                ) {
-                    NumberedStep("Conecta y revisa limpieza")
-                    NumberedStep("Carga frijoles con cuidado")
-                    NumberedStep("Ajusta ranuras/rodillos")
-                    NumberedStep("Enciende y verifica clasificación")
-                    NumberedStep("Recolecta según tamaño")
-                    NumberedStep("Apaga y limpia la máquina")
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
 
                 // Botón de logout
                 Button(
@@ -366,15 +319,15 @@ fun ProfileScreen(
         }
     }
 
-    // --- Diálogos ---
+
     if (showEditNameDialog) {
         EditNameDialog(
             currentName = userName,
             newName = newName,
+            errorMessage = editNameState.errorMessage, // 👈 mostramos el error si existe
             onNewNameChange = { newName = it },
             onConfirm = {
                 sessionViewModel.updateUserName(newName)
-                showEditNameDialog = false
             },
             onDismiss = {
                 showEditNameDialog = false
@@ -383,27 +336,61 @@ fun ProfileScreen(
         )
     }
 
+    LaunchedEffect(editNameState.success) {
+        if (editNameState.success) {
+            showEditNameDialog = false
+            newName = ""
+            Toast.makeText(context, "Nombre de usuario actualizada correctamente", Toast.LENGTH_SHORT).show()
+        }
+    }
+    LaunchedEffect(Unit) {
+        sessionViewModel.passwordUpdateSuccess.collect {
+            showChangePasswordDialog = false
+            currentPassword = ""
+            newPassword = ""
+            confirmPassword = ""
+            Toast.makeText(context, "Contraseña actualizada correctamente", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+    // Modal
     if (showChangePasswordDialog) {
+        // Escucha el evento de éxito
+
+
         ChangePasswordDialog(
             currentPassword = currentPassword,
             newPassword = newPassword,
             confirmPassword = confirmPassword,
-            onCurrentPasswordChange = { currentPassword = it },
+            errorMessage = errorMessage ?: "",
+            enabled = !isLocked,
+            isLocked = isLocked,
+            onCurrentPasswordChange = {
+                currentPassword = it
+                sessionViewModel.clearError()
+            },
             onNewPasswordChange = { newPassword = it },
             onConfirmPasswordChange = { confirmPassword = it },
             onConfirm = {
-                // Aquí va la lógica para cambiar la contraseña
-                sessionViewModel.updatePassword(currentPassword, newPassword)
-                showChangePasswordDialog = false
-                currentPassword = ""
-                newPassword = ""
-                confirmPassword = ""
+                when {
+                    newPassword != confirmPassword -> {
+                        sessionViewModel.setLocalError("Las contraseñas nuevas no coinciden")
+                    }
+                    newPassword.length < 6 -> {
+                        sessionViewModel.setLocalError("La contraseña nueva debe tener al menos 6 caracteres")
+                    }
+                    else -> {
+                        sessionViewModel.updatePassword(currentPassword, newPassword)
+                    }
+                }
             },
             onDismiss = {
                 showChangePasswordDialog = false
                 currentPassword = ""
                 newPassword = ""
                 confirmPassword = ""
+                sessionViewModel.clearError()
             }
         )
     }
@@ -414,142 +401,79 @@ fun ChangePasswordDialog(
     currentPassword: String,
     newPassword: String,
     confirmPassword: String,
+    errorMessage: String?,
+    enabled: Boolean = true,
+    isLocked: Boolean = false,
     onCurrentPasswordChange: (String) -> Unit,
     onNewPasswordChange: (String) -> Unit,
     onConfirmPasswordChange: (String) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            Column(modifier = Modifier.padding(24.dp)) {
-                // Título con icono
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = "Cambiar contraseña",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Cambiar Contraseña") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = currentPassword,
+                    onValueChange = onCurrentPasswordChange,
+                    label = { Text("Contraseña Actual") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    enabled = enabled && !isLocked,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = newPassword,
+                    onValueChange = onNewPasswordChange,
+                    label = { Text("Nueva Contraseña") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    enabled = enabled && !isLocked,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = onConfirmPasswordChange,
+                    label = { Text("Confirmar Nueva Contraseña") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    enabled = enabled && !isLocked,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                when {
+                    !errorMessage.isNullOrBlank() -> Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Cambiar contraseña",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
+                    newPassword != confirmPassword && newPassword.isNotEmpty() -> Text(
+                        text = "Las contraseñas nuevas no coinciden",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
                     )
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Campos de contraseña
-                Column {
-                    OutlinedTextField(
-                        value = currentPassword,
-                        onValueChange = onCurrentPasswordChange,
-                        label = { Text("Contraseña actual") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        visualTransformation = PasswordVisualTransformation(),
-                        trailingIcon = {
-                            Icon(Icons.Default.Security, contentDescription = "Contraseña actual")
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surface,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    OutlinedTextField(
-                        value = newPassword,
-                        onValueChange = onNewPasswordChange,
-                        label = { Text("Nueva contraseña") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        visualTransformation = PasswordVisualTransformation(),
-                        trailingIcon = {
-                            Icon(Icons.Default.Password, contentDescription = "Nueva contraseña")
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surface,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    OutlinedTextField(
-                        value = confirmPassword,
-                        onValueChange = onConfirmPasswordChange,
-                        label = { Text("Confirmar contraseña") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        visualTransformation = PasswordVisualTransformation(),
-                        trailingIcon = {
-                            Icon(Icons.Default.Verified, contentDescription = "Confirmar contraseña")
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surface,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
-                        )
-                    )
-                }
-
-                // Validación de contraseña
-                if (newPassword.isNotEmpty() && confirmPassword.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = if (newPassword == confirmPassword) "✓ Las contraseñas coinciden"
-                        else "✗ Las contraseñas no coinciden",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (newPassword == confirmPassword) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(horizontal = 4.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Botones
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    TextButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("Cancelar")
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Button(
-                        onClick = onConfirm,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = currentPassword.isNotEmpty() &&
-                                newPassword.isNotEmpty() &&
-                                confirmPassword.isNotEmpty() &&
-                                newPassword == confirmPassword
-                    ) {
-                        Text("Cambiar")
-                    }
                 }
             }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = enabled && newPassword == confirmPassword && !isLocked
+            ) { Text("Confirmar") }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) { Text("Cancelar") }
         }
-    }
+    )
 }
-
 @Composable
 fun EditNameDialog(
     currentName: String,
     newName: String,
+    errorMessage: String?, // 👈 nuevo parámetro
     onNewNameChange: (String) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
@@ -563,7 +487,6 @@ fun EditNameDialog(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                // Título con icono
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Person,
@@ -600,6 +523,17 @@ fun EditNameDialog(
                     }
                 )
 
+                // 👇 Mensaje de error si existe
+                if (!errorMessage.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Row(modifier = Modifier.fillMaxWidth()) {
@@ -626,6 +560,7 @@ fun EditNameDialog(
         }
     }
 }
+
 
 @Composable
 fun ProfileInfoItem(

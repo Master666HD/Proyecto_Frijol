@@ -17,11 +17,13 @@ import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Streaming
 
 interface ApiService {
     @Headers("Accept: application/json")
@@ -76,6 +78,10 @@ interface ApiService {
     ): Response<ResponseBody>
 
 
-
+    @GET("batches/pdf")
+    @Streaming
+    suspend fun downloadBatchesPdf(
+        @Header("Authorization") token: String
+    ): Response<ResponseBody>
 
 }

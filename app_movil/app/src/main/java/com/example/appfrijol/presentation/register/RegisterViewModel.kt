@@ -1,6 +1,7 @@
 package com.example.appfrijol.presentation.register
 
 import android.content.Context
+import androidx.compose.runtime.mutableStateOf
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,20 +11,18 @@ import com.example.appfrijol.domain.model.User
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Response
 import javax.inject.Inject
+import androidx.compose.runtime.State
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val apiService: ApiService
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(RegisterUiState())
-    val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
+    private val _uiState = mutableStateOf(RegisterUiState())
+    val uiState: State<RegisterUiState> = _uiState
 
     fun registerUser(
         firstName: String,
@@ -96,6 +95,35 @@ class RegisterViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(
                 message = "Error al procesar la respuesta del servidor"
             )
+        }
+    }
+    fun onFieldChange(field: String, value: String) {
+        _uiState.value = when (field) {
+            "firstName" -> _uiState.value.copy(
+                firstName = value,
+                errors = _uiState.value.errors.toMutableMap().apply { remove("firstName") }
+            )
+            "lastName" -> _uiState.value.copy(
+                lastName = value,
+                errors = _uiState.value.errors.toMutableMap().apply { remove("lastName") }
+            )
+            "phoneNumber" -> _uiState.value.copy(
+                phoneNumber = value,
+                errors = _uiState.value.errors.toMutableMap().apply { remove("phoneNumber") }
+            )
+            "email" -> _uiState.value.copy(
+                email = value,
+                errors = _uiState.value.errors.toMutableMap().apply { remove("email") }
+            )
+            "userName" -> _uiState.value.copy(
+                userName = value,
+                errors = _uiState.value.errors.toMutableMap().apply { remove("userName") }
+            )
+            "password" -> _uiState.value.copy(
+                password = value,
+                errors = _uiState.value.errors.toMutableMap().apply { remove("password") }
+            )
+            else -> _uiState.value
         }
     }
 

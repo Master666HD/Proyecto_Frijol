@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
@@ -34,6 +33,20 @@ class LoginViewModel @Inject constructor(
     }
 
     fun login(username: String, password: String, onSuccess: (UserInfo) -> Unit) {
+        // 🔹 Validación de campos vacíos antes de iniciar login
+        if (username.isBlank() && password.isBlank()) {
+            message = "Usuario y contraseña no pueden estar vacíos"
+            return
+        }
+        if (username.isBlank()) {
+            message = "Usuario no puede estar vacío"
+            return
+        }
+        if (password.isBlank()) {
+            message = "Contraseña no puede estar vacía"
+            return
+        }
+
         viewModelScope.launch {
             isLoading = true
             message = ""
@@ -43,19 +56,12 @@ class LoginViewModel @Inject constructor(
             result.onSuccess { loginResponse ->
                 val userWithToken = loginResponse.user.copy(token = loginResponse.token)
 
-
-                Log.d("LoginVM", "🔹 LoginResponse -> id=${loginResponse.user.id}, " +
-                        "userName=${loginResponse.user.userName}, " +
-                        "firstName=${loginResponse.user.firstName}, " +
-                        "role=${loginResponse.user.role}")
-
-
-                // Guardamos en DataStore
+                // Guardar sesión
                 dataStoreManager.saveSession(
                     token = loginResponse.token,
-                    // Siempre priorizamos userName sobre firstName
                     userName = loginResponse.user.userName ?: loginResponse.user.firstName ?: "",
-                    userId = loginResponse.user.id.toString()
+                    userId = loginResponse.user.id.toString(),
+                    email = loginResponse.user.email.toString()
                 )
 
                 saveUser(userWithToken)
@@ -63,7 +69,8 @@ class LoginViewModel @Inject constructor(
             }
 
             result.onFailure { e ->
-                message = e.message ?: "Error desconocido"
+                // 🔹 Mensaje del backend o fallback
+                message = e.message ?: "Ocurrió un error inesperado"
             }
 
             isLoading = false
@@ -77,31 +84,29 @@ class LoginViewModel @Inject constructor(
             onLogout()
         }
     }
+
     init {
         loadSession()
     }
 
     private fun loadSession() {
         viewModelScope.launch {
-
             val userName = dataStoreManager.userNameFlow.firstOrNull()
             val token = dataStoreManager.tokenFlow.firstOrNull()
             val userId = dataStoreManager.userIdFlow.firstOrNull()
+            val email = dataStoreManager.emailFlow.firstOrNull()
 
             if (!userName.isNullOrEmpty() && !token.isNullOrEmpty()) {
                 _currentUser.value = UserInfo(
-                    id = userId?.toIntOrNull() ?: 0,        // si no hay id → 0
+                    id = userId?.toIntOrNull() ?: 0,
+                    userName = userName,
+                    token = token,
                     firstName = "",
                     lastName = "",
-                    email = "",
-                    userName = userName ?: "",              // si no hay username → vacío
-                    role = "",
-                    token = token ?: ""
+                    email = email,
+                    role = ""
                 )
-
             }
         }
     }
-
 }
-

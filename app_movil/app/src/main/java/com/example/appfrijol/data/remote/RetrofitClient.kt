@@ -24,7 +24,7 @@ val Context.dataStore by preferencesDataStore(name = "auth_prefs")
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    private const val BASE_URL = "http://10.90.171.96:8000/api/"
+    private const val BASE_URL = "http://192.168.2.232:8000/api/"
 
     @Provides
     @Singleton
@@ -69,7 +69,7 @@ object AppModule {
     @Singleton
     fun provideAuthRepository(
         apiService: ApiService,
-        dataStoreManager: DataStoreManager // Añade DataStoreManager como parámetro
+        dataStoreManager: DataStoreManager
     ): AuthRepository =
         AuthRepository(apiService, dataStoreManager)
 

@@ -2,6 +2,9 @@ package com.example.appfrijol.presentation.result
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -13,9 +16,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,6 +32,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Compare
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material.icons.filled.Warning
@@ -65,16 +71,28 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PaintingStyle.Companion.Stroke
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.appfrijol.domain.model.Seed
 import com.example.appfrijol.presentation.session.SessionViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.Locale
+import kotlin.math.cos
+import kotlin.math.roundToInt
+import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -100,24 +118,18 @@ fun ResultScreen(
     val primaryColor = MaterialTheme.colorScheme.primary
     val surfaceColor = MaterialTheme.colorScheme.surface
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
-    val gradientColors = listOf(
-        MaterialTheme.colorScheme.primary,
-        MaterialTheme.colorScheme.secondary,
-        MaterialTheme.colorScheme.tertiary
-    )
 
-    Scaffold(
-    ) { innerPadding ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                             MaterialTheme.colorScheme.background
                         )
+
                     )
                 )
         ) {
@@ -252,49 +264,21 @@ fun ResultScreen(
                                         )
                                     }
 
-                                    Checkbox(
-                                        checked = seedViewModel.selectedIds.contains(index),
-                                        onCheckedChange = { checked ->
-                                            if (checked) seedViewModel.selectedIds.add(index)
-                                            else seedViewModel.selectedIds.remove(index)
-                                        },
-                                        colors = CheckboxDefaults.colors(checkedColor = primaryColor)
-                                    )
                                 }
                             }
                         }
+                        val token = sessionViewModel.token.collectAsState().value
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        ExportPdfButton(
+                            seedViewModel = seedViewModel,
+                            token = token.toString()
+                        )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Botón de comparación
-                Button(
-                    onClick = { /* implementar comparación */ },
-                    enabled = seedViewModel.selectedIds.size >= 2,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = primaryColor,
-                        disabledContainerColor = primaryColor.copy(alpha = 0.3f)
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 4.dp,
-                        pressedElevation = 8.dp
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Compare,
-                        contentDescription = "Comparar",
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "Comparar ${seedViewModel.selectedIds.size} lotes",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
 
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -313,6 +297,7 @@ fun ResultScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .verticalScroll(rememberScrollState())
                     ) {
                         Text(
                             text = tituloLote,
@@ -412,6 +397,31 @@ fun ResultScreen(
                 }
             }
         }
+}
+@Composable
+fun ExportPdfButton(
+    seedViewModel: SeedViewModel,
+    token: String, // Tu token de autenticación
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    Button(
+        onClick = {
+            seedViewModel.downloadAllBatchesPdf(context, token)
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Download,
+            contentDescription = "Descargar PDF",
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = "Exportar PDF de Lotes")
     }
 }
 
@@ -431,10 +441,14 @@ fun GraficasTab(semillasEnLote: List<Seed>) {
         return
     }
 
-    // Datos para gráficos
-    val datosPorEstado = semillasEnLote.groupBy { it.status.lowercase() }
-        .mapValues { it.value.size }
+
+    val datosPorEstado: Map<String, Int> = semillasEnLote
+        .groupBy { it.status.lowercase() } // Agrupa en "apto" y "no apto"
+        .mapValues { it.value.size }       // Cuenta cuántos hay de cada grupo
+
     val datosPorColor = semillasEnLote.groupBy { it.color.lowercase() }
+        .mapValues { it.value.size }
+    val datosPorTamaño = semillasEnLote.groupBy { it.size.lowercase() }
         .mapValues { it.value.size }
 
     val datosPorPeso: Map<String, Int> = semillasEnLote.groupBy { semilla ->
@@ -459,7 +473,7 @@ fun GraficasTab(semillasEnLote: List<Seed>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
+
     ) {
 
 
@@ -478,6 +492,18 @@ fun GraficasTab(semillasEnLote: List<Seed>) {
                 .fillMaxWidth()
                 .height(200.dp)
                 .padding(8.dp)
+        )
+        Text(
+            "Distribución por Tamaño",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+        GraficoBarras(
+            datos = datosPorTamaño,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            titulo = "Distribución por Tamaño"
         )
 
         // Gráfico de colores
@@ -506,8 +532,8 @@ fun GraficasTab(semillasEnLote: List<Seed>) {
             datos = datosPorPeso,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
-                .padding(8.dp)
+                .padding(8.dp),
+            titulo = "Distribución por Peso"
         )
     }
 }
@@ -521,17 +547,20 @@ fun DatosTab(semillasEnLote: List<Seed>) {
                 .height(200.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text("No hay datos para mostrar", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+            Text(
+                "No hay datos para mostrar",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
         }
         return
     }
 
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(300.dp)
+            .padding(vertical = 4.dp)
     ) {
-        itemsIndexed(semillasEnLote) { index, semilla ->
+        semillasEnLote.forEachIndexed { index, semilla ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -553,7 +582,6 @@ fun DatosTab(semillasEnLote: List<Seed>) {
                                 color = when (semilla.color.lowercase()) {
                                     "malo" -> Color.Red
                                     "bueno" -> Color.Green
-
                                     else -> Color.Gray
                                 },
                                 shape = CircleShape
@@ -570,10 +598,9 @@ fun DatosTab(semillasEnLote: List<Seed>) {
                         )
 
                         Text(
-                            text = "Estado: ${semilla.status}, Color: ${semilla.color}, Peso: ${semilla.weight}",
+                            text = "Estado: ${semilla.status}, Color: ${semilla.color}, Tamaño: ${semilla.size}, Peso: ${semilla.weight}",
                             style = MaterialTheme.typography.bodySmall
                         )
-
                     }
 
                     Text(
@@ -588,99 +615,367 @@ fun DatosTab(semillasEnLote: List<Seed>) {
 }
 
 @Composable
-fun GraficoCircular(datos: Map<String, Int>, modifier: Modifier = Modifier) {
+fun GraficoCircular(
+    datos: Map<String, Int>,
+    modifier: Modifier = Modifier
+) {
     val total = datos.values.sum().toFloat()
+    if (total == 0f) return // Evitar división por cero
 
-    Canvas(modifier = modifier) {
-        var startAngle = 0f
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // --- Gráfico circular a la izquierda ---
+            Canvas(
+                modifier = Modifier
+                    .size(150.dp)
+            ) {
+                var startAngle = 0f
+                datos.entries.forEach { (key, value) ->
+                    val sweepAngle = (value / total) * 360f
+                    val color = when (key.lowercase()) {
+                        "apto" -> Color(0xFF4CAF50)
+                        "no apto" -> Color(0xFFF44336)
+                        "bueno" -> Color(0xFF4CAF50)
+                        "malo" -> Color(0xFFF44336)
+                        else -> Color.Gray
+                    }
 
-        datos.entries.forEach { (key, value) ->
-            val sweepAngle = (value / total) * 360f
-            Log.d("GraficoCircular", "Clave recibida: '$key'")
+                    drawArc(
+                        color = color,
+                        startAngle = startAngle,
+                        sweepAngle = sweepAngle,
+                        useCenter = true
+                    )
 
-            // 🔑 Aquí decides el color según el texto que viene de la API
-            val color = when (key.trim().lowercase()) {
-                "bueno" -> Color(0xFF4CAF50) // verde
-                "malo" -> Color(0xFFF44336)  // rojo
-                else -> Color.Gray
-            // fallback
+                    // Texto dentro del sector
+                    val angleMiddle = startAngle + sweepAngle / 2
+                    val radius = size.minDimension / 3
+                    val x = (size.width / 2 + radius * cos(Math.toRadians(angleMiddle.toDouble()))).toFloat()
+                    val y = (size.height / 2 + radius * sin(Math.toRadians(angleMiddle.toDouble()))).toFloat()
+
+                    drawContext.canvas.nativeCanvas.apply {
+                        val texto = "$value"
+                        drawText(
+                            texto,
+                            x,
+                            y,
+                            android.graphics.Paint().apply {
+                                this.color = android.graphics.Color.BLACK
+                                textSize = 28f
+                                textAlign = android.graphics.Paint.Align.CENTER
+                                isFakeBoldText = true
+                            }
+                        )
+                    }
+
+                    startAngle += sweepAngle
+                }
             }
 
-            drawArc(
-                color = color,
-                startAngle = startAngle,
-                sweepAngle = sweepAngle,
-                useCenter = true,
-                size = Size(size.minDimension, size.minDimension),
-                topLeft = Offset(
-                    (size.width - size.minDimension) / 2,
-                    (size.height - size.minDimension) / 2
-                )
-            )
+            Spacer(modifier = Modifier.width(24.dp))
 
-            startAngle += sweepAngle
+            // --- Resumen a la derecha ---
+            Column(
+                verticalArrangement = Arrangement.Center
+            ) {
+                datos.entries.forEach { (key, value) ->
+                    val porcentaje = ((value / total) * 100).roundToInt()
+                    val color = when (key.lowercase()) {
+                        "apto" -> Color(0xFF4CAF50)
+                        "no apto" -> Color(0xFFF44336)
+                        "bueno" -> Color(0xFF4CAF50)
+                        "malo" -> Color(0xFFF44336)
+                        else -> Color.Gray
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .background(color, CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = key.replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "$value semillas (${porcentaje}%)",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Gray
+                                )
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
-
 
 @Composable
-fun GraficoBarras(datos: Map<String, Int>, modifier: Modifier = Modifier) {
-    val maxValue = datos.values.maxOrNull()?.toFloat() ?: 1f
-    val colors = listOf(
-        Color(0xFF4FC3F7),
-        Color(0xFF29B6F6),
-        Color(0xFF03A9F4),
-        Color(0xFF039BE5),
-        Color(0xFF0288D1)
+fun GraficoBarras(
+    datos: Map<String, Int>,
+    modifier: Modifier = Modifier,
+    colorBarras: Color = Color(0xFF4CAF50),
+    colorTexto: Color = MaterialTheme.colorScheme.onSurface,
+    mostrarPorcentajes: Boolean = true,
+    titulo: String? = null,
+    animarBarras: Boolean = true
+) {
+    val total = datos.values.sum().toFloat()
+
+    // Si no hay datos
+    if (total == 0f) {
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .heightIn(min = 200.dp),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(8.dp)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No hay datos disponibles",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+            }
+        }
+        return
+    }
+
+    // 🔥 Altura dinámica según la cantidad de categorías
+    val alturaBasePorBarra = 60.dp           // altura ideal por barra
+    val alturaCanvas = 200.dp                // altura de la zona del gráfico
+    val alturaExtraEtiquetas = 40.dp         // espacio inferior para etiquetas
+    val alturaCard = alturaCanvas + alturaExtraEtiquetas
+
+    // Animación
+    var animacionCompletada by remember { mutableStateOf(false) }
+    val progresoAnimacion by animateFloatAsState(
+        targetValue = if (animarBarras && animacionCompletada) 1f else 0f,
+        animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing),
+        label = "animacion_barras"
     )
 
-    Canvas(modifier = modifier) {
-        val barWidth = size.width / (datos.size * 2f)
-        val spacing = barWidth / 2
+    LaunchedEffect(Unit) { animacionCompletada = true }
 
-        datos.entries.forEachIndexed { index, (key, value) ->
-            val barHeight = (value / maxValue) * size.height * 0.8f
-            val x = index * (barWidth + spacing) + spacing
-            val y = size.height - barHeight
-
-            drawRoundRect(
-                color = colors.getOrElse(index % colors.size) { Color.Gray },
-                topLeft = Offset(x, y),
-                size = Size(barWidth, barHeight),
-                cornerRadius = CornerRadius(4.dp.toPx())
-            )
-
-            // Etiqueta de valor
-            drawContext.canvas.nativeCanvas.apply {
-                drawText(
-                    value.toString(),
-                    x + barWidth / 2,
-                    y - 8.dp.toPx(),
-                    android.graphics.Paint().apply {
-                        color = android.graphics.Color.BLACK
-                        textSize = 12.sp.toPx()
-                        textAlign = android.graphics.Paint.Align.CENTER
-                    }
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = alturaCard),  // 🔑 ajusta la altura mínima
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Título opcional
+            titulo?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
                 )
             }
 
-            // Etiqueta de categoría
-            drawContext.canvas.nativeCanvas.apply {
-                drawText(
-                    key,
-                    x + barWidth / 2,
-                    size.height - 4.dp.toPx(),
-                    android.graphics.Paint().apply {
-                        color = android.graphics.Color.BLACK
-                        textSize = 10.sp.toPx()
-                        textAlign = android.graphics.Paint.Align.CENTER
+            // 🔑 Canvas dinámico
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(alturaCanvas)
+            ) {
+                val maxValue = datos.values.maxOrNull()?.toFloat() ?: 1f
+                val barWidth = (size.width - 32.dp.toPx()) / (datos.size * 2f)
+                val spacing = barWidth / 2
+
+                datos.entries.forEachIndexed { index, (key, value) ->
+                    val barHeight = ((value / maxValue) * size.height * 0.8f) * progresoAnimacion
+                    val x = index * (barWidth + spacing) + spacing + 16.dp.toPx()
+                    val y = size.height - barHeight
+
+                    // Barra
+                    drawRoundRect(
+                        color = colorBarras,
+                        topLeft = Offset(x, y),
+                        size = Size(barWidth, barHeight),
+                        cornerRadius = CornerRadius(4.dp.toPx())
+                    )
+
+                    // Cantidad sobre la barra
+                    if (barHeight > 20.dp.toPx()) {
+                        drawContext.canvas.nativeCanvas.drawText(
+                            value.toString(),
+                            x + barWidth / 2,
+                            y - 8.dp.toPx(),
+                            android.graphics.Paint().apply {
+                                color = colorTexto.toArgb()
+                                textSize = 12.sp.toPx()
+                                textAlign = android.graphics.Paint.Align.CENTER
+                                isFakeBoldText = true
+                                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                            }
+                        )
                     }
-                )
+
+                    // 🔑 Etiquetas visibles debajo de las barras
+                    drawContext.canvas.nativeCanvas.drawText(
+                        if (key.length > 8) "${key.take(8)}..." else key,
+                        x + barWidth / 2,
+                        size.height + 16.dp.toPx(),   // margen inferior
+                        android.graphics.Paint().apply {
+                            color = colorTexto.toArgb()
+                            textSize = 10.sp.toPx()
+                            textAlign = android.graphics.Paint.Align.CENTER
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // 🔎 Resumen de datos
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+
+            ) {
+                datos.entries.sortedByDescending { it.value }.forEach { (key, value) ->
+                    val porcentaje = ((value / total) * 100)
+                    val porcentajeFormateado = String.format("%.1f", porcentaje)
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        // Indicador de color
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .background(colorBarras, CircleShape)
+                        )
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        // Información
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = key.replaceFirstChar {
+                                    if (it.isLowerCase()) it.titlecase(Locale.getDefault())
+                                    else it.toString()
+                                },
+                                style = MaterialTheme.typography.bodyLarge,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            Text(
+                                text = if (mostrarPorcentajes) {
+                                    "$value ${if (value == 1) "semilla" else "semillas"} ($porcentajeFormateado%)"
+                                } else {
+                                    "$value ${if (value == 1) "semilla" else "semillas"}"
+                                },
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            )
+                        }
+
+                        // Barra de porcentaje opcional
+                        if (mostrarPorcentajes) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .width(60.dp)
+                                    .height(4.dp)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .height(4.dp)
+                                        .width(60.dp * porcentaje / 100f)
+                                        .background(colorBarras)
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
+
+
+// Versión alternativa con colores diferentes para cada barra
+@Composable
+fun GraficoBarrasColorido(
+    datos: Map<String, Int>,
+    colores: List<Color> = listOf(
+        Color(0xFF4CAF50),
+        Color(0xFF2196F3),
+        Color(0xFFFF9800),
+        Color(0xFFF44336),
+        Color(0xFF9C27B0),
+        Color(0xFF607D8B)
+    ),
+    modifier: Modifier = Modifier
+) {
+    GraficoBarras(
+        datos = datos,
+        modifier = modifier,
+        colorBarras = Color(0xFF4CAF50), // Color por defecto, se puede personalizar
+        animarBarras = true
+    )
+}
+
+// Preview para testing
+@Preview(showBackground = true)
+@Composable
+fun PreviewGraficoBarras() {
+    MaterialTheme {
+        GraficoBarras(
+            datos = mapOf(
+                "Manzanas" to 150,
+                "Naranjas" to 75,
+                "Plátanos" to 200,
+                "Uvas" to 50,
+                "Fresas" to 125
+            ),
+            titulo = "Distribución de Semillas",
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+
+
 
 @Composable
 fun AnimatedCard(

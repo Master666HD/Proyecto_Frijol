@@ -45,14 +45,11 @@ fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
     viewModel: RegisterViewModel = hiltViewModel()
 ) {
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var phoneNumber by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var userName by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState
 
-    val uiState by viewModel.uiState.collectAsState()
+    val textFieldModifier = Modifier
+        .fillMaxWidth()
+        .height(64.dp)
 
     LaunchedEffect(Unit) { viewModel.clearState() }
 
@@ -77,14 +74,12 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        val textFieldModifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
+
 
         // Nombres
         OutlinedTextField(
-            value = firstName,
-            onValueChange = { firstName = it },
+            value = uiState.firstName,
+            onValueChange = { viewModel.onFieldChange("firstName", it) },
             label = { Text("Nombres") },
             isError = uiState.errors.containsKey("firstName"),
             modifier = textFieldModifier,
@@ -110,8 +105,8 @@ fun RegisterScreen(
 
         // Apellidos
         OutlinedTextField(
-            value = lastName,
-            onValueChange = { lastName = it },
+            value =uiState.lastName,
+            onValueChange = { viewModel.onFieldChange("lastName", it) },
             label = { Text("Apellidos") },
             isError = uiState.errors.containsKey("lastName"),
             modifier = textFieldModifier,
@@ -137,8 +132,8 @@ fun RegisterScreen(
 
         // Teléfono con bandera de Bolivia
         OutlinedTextField(
-            value = phoneNumber,
-            onValueChange = { phoneNumber = it },
+            value =uiState.phoneNumber,
+            onValueChange = { viewModel.onFieldChange("phoneNumber", it) },
             label = { Text("Teléfono") },
             leadingIcon = {
                 Image(
@@ -172,8 +167,8 @@ fun RegisterScreen(
 
         // Correo
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
+            value =uiState.email,
+            onValueChange = { viewModel.onFieldChange("email", it) },
             label = { Text("Correo") },
             isError = uiState.errors.containsKey("email"),
             modifier = textFieldModifier,
@@ -200,8 +195,8 @@ fun RegisterScreen(
 
         // Usuario
         OutlinedTextField(
-            value = userName,
-            onValueChange = { userName = it },
+            value =uiState.userName,
+            onValueChange = { viewModel.onFieldChange("userName", it) },
             label = { Text("Usuario") },
             isError = uiState.errors.containsKey("userName"),
             modifier = textFieldModifier,
@@ -227,8 +222,8 @@ fun RegisterScreen(
 
         // Contraseña
         OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
+            value =uiState.password,
+            onValueChange = { viewModel.onFieldChange("password", it) },
             label = { Text("Contraseña") },
             visualTransformation = PasswordVisualTransformation(),
             isError = uiState.errors.containsKey("password"),
@@ -259,8 +254,8 @@ fun RegisterScreen(
             Button(
                 onClick = {
                     viewModel.registerUser(
-                        firstName, lastName, phoneNumber,
-                        email, userName, password, onRegisterSuccess
+                        uiState.firstName, uiState.lastName, uiState.phoneNumber,
+                        uiState.email, uiState.userName, uiState.password, onRegisterSuccess
                     )
                 },
                 colors = ButtonDefaults.buttonColors(

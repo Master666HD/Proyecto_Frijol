@@ -5,12 +5,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
@@ -43,6 +45,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appfrijol.R
 import com.example.appfrijol.domain.model.UserInfo
+import com.example.appfrijol.ui.theme.BlancoApp
+import com.example.appfrijol.ui.theme.NegroApp
 import com.example.appfrijol.ui.theme.VerdeApp
 
 @Composable
@@ -58,6 +62,10 @@ fun LoginScreen(
     val isLoading = loginViewModel.isLoading
     val message = loginViewModel.message
 
+    val textFieldModifier = Modifier
+        .fillMaxWidth()
+        .height(64.dp)
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -65,13 +73,18 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Logo
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "Logo",
-            modifier = Modifier.size(200.dp)
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "BIENVENIDO",
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 43.sp,
+                fontWeight = FontWeight.Bold
+            )
 
+        }
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
@@ -105,7 +118,7 @@ fun LoginScreen(
                 errorLabelColor = MaterialTheme.colorScheme.error,
                 errorCursorColor = MaterialTheme.colorScheme.error
             ),
-            modifier = Modifier.fillMaxWidth()
+            modifier = textFieldModifier
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -139,7 +152,7 @@ fun LoginScreen(
                 errorLabelColor = MaterialTheme.colorScheme.error,
                 errorCursorColor = MaterialTheme.colorScheme.error
             ),
-            modifier = Modifier.fillMaxWidth()
+            modifier = textFieldModifier
         )
 
         Spacer(modifier = Modifier.height(24.dp))

@@ -18,11 +18,16 @@ class DataStoreManager @Inject constructor(
     companion object {
         private val TOKEN = stringPreferencesKey("auth_token")
         private val USER_NAME = stringPreferencesKey("user_name")
-        private val USER_ID = stringPreferencesKey("user_id") // 👈 nuevo
+        private val USER_ID = stringPreferencesKey("user_id")
+        private val EMAIL = stringPreferencesKey("email")// 👈 nuevo
     }
 
     val tokenFlow: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[TOKEN]
+    }
+
+    val emailFlow: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[EMAIL]
     }
 
     val userNameFlow: Flow<String?> = context.dataStore.data.map { preferences ->
@@ -33,13 +38,14 @@ class DataStoreManager @Inject constructor(
         preferences[USER_ID]
     }
 
-    suspend fun saveSession(token: String, userName: String, userId: Any) {
+    suspend fun saveSession(token: String, userName: String,email: String, userId: Any) {
         // Any si viene como Int
         Log.d("DataStore", "💾 saveSession() -> token=$token, userName=$userName, userId=$userId")
         context.dataStore.edit { preferences ->
             preferences[TOKEN] = token
             preferences[USER_NAME] = userName
-            preferences[USER_ID] = userId.toString() // 🔑 siempre String
+            preferences[USER_ID] = userId.toString()
+            preferences[EMAIL] = email // 🔑 siempre String
         }
     }
 

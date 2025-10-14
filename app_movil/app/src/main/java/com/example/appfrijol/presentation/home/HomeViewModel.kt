@@ -28,21 +28,30 @@ class HomeViewModel @Inject constructor(
 
     fun loadData() {
         viewModelScope.launch {
-            // Cargar último lote
-            repository.getLastBatchSummary().onSuccess { summary ->
-                lastBatchSummary = summary
-            }.onFailure { e ->
-                errorMessage = e.message
-            }
+            // Lote
+            repository.getLastBatchSummary()
+                .onSuccess { summary ->
+                    lastBatchSummary = summary
+                    errorMessage = null
+                }
+                .onFailure { e ->
+                    errorMessage = e.message
+                }
 
-            // Cargar métricas de productividad
-            repository.getProductivityMetrics().onSuccess { metrics ->
-                productivityMetrics = metrics
-            }.onFailure { e ->
-                errorMessage = e.message
-            }
+            // Productividad
+            repository.getProductivityMetrics()
+                .onSuccess { metrics ->
+                    productivityMetrics = metrics     // siempre con valores seguros
+                    errorMessage = null
+                }
+                .onFailure { e ->
+                    // si falla, dejamos métricas vacías
+                    productivityMetrics = ProductivityMetrics(
+                        total_beans = 0,
+                        batches_last_week = emptyMap()
+                    )
+                    errorMessage = e.message
+                }
         }
     }
 }
-
-

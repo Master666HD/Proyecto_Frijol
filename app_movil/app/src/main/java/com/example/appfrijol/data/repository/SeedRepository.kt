@@ -1,5 +1,14 @@
 package com.example.appfrijol.data.repository
 
+import android.content.ContentValues
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Environment
+import android.provider.MediaStore
+import android.util.Log
+import android.widget.Toast
+import androidx.core.content.FileProvider
 import com.example.appfrijol.data.remote.api.ApiService
 import com.example.appfrijol.data.remote.dto.CompareRequest
 import com.example.appfrijol.data.remote.dto.SeedDto
@@ -7,6 +16,10 @@ import com.example.appfrijol.domain.model.Batch
 import com.example.appfrijol.domain.model.LastBatchSummary
 import com.example.appfrijol.domain.model.ProductivityMetrics
 import com.example.appfrijol.domain.model.Seed
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.InputStream
 import javax.inject.Inject
 
 class SeedRepository @Inject constructor(
@@ -34,16 +47,24 @@ class SeedRepository @Inject constructor(
 // --------------------------
     suspend fun getProductivityMetrics(): Result<ProductivityMetrics> {
         return try {
-            val dto = apiService.getProductivityMetrics() // ProductivityMetricsDto
+            val dto = apiService.getProductivityMetrics()
+            Log.d("API_METRICS", "Respuesta cruda: $dto")
+
             val domain = ProductivityMetrics(
-                total_beans = dto.total_beans,
-                batches_last_week = dto.batches_last_week
+                total_beans = dto.total_beans ?: 0,
+                batches_last_week = dto.batches_last_week ?: emptyMap()
             )
+
+            Log.d("API_METRICS", "Convertido a dominio: $domain")
+
             Result.success(domain)
         } catch (e: Exception) {
+            Log.e("API_METRICS", "❌ Error obteniendo métricas", e)
             Result.failure(e)
         }
     }
+
+
 
     // Historial completo
     suspend fun getBatchHistory(): Result<List<Batch>> {
@@ -79,37 +100,6 @@ class SeedRepository @Inject constructor(
 
 
 
-    // Detalle de un lote
-
-
-    // Comparar lotes
-    suspend fun compareBatches(ids: List<Int>): Result<List<Seed>> {
-        return try {
-            val response = apiService.compareBatches(CompareRequest(ids))
-            if (response.isSuccessful) {
-                val dtos = response.body() ?: emptyList<SeedDto>()
-
-                // Mapear DTOs a modelos de dominio
-                val seeds = dtos.map { dto ->
-                    Seed(
-                        id = dto.id,
-                        color = dto.color,
-                        size = dto.size,
-                        weight = dto.weight,
-                        status = dto.status,
-                        registration_date = dto.registration_date
-                    )
-                }
-
-                Result.success(seeds)
-            } else {
-                Result.failure(Exception("Error ${response.code()}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
 
     suspend fun exportBatchByRange(start: String, end: String, format: String): Result<ByteArray> {
         return try {
@@ -124,8 +114,75 @@ class SeedRepository @Inject constructor(
             Result.failure(e)
         }
     }
+    suspend fun downloadPdf(context: Context, token: String): Result<Uri> {
+        return try {
+            val response = apiService.downloadBatchesPdf("Bearer $token")
+
+            if (response.isSuccessful) {
+                response.body()?.let { body ->
+                    val filename = "batch_history_${System.currentTimeMillis()}.pdf"
+                    val fileUri = savePdfFile(context, body.byteStream(), filename)
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "📄 PDF guardado correctamente", Toast.LENGTH_SHORT).show()
+
+                        try {
+                            // 🔹 Obtener URI segura para el FileProvider
+                            val file = File(fileUri.path!!)
+                            val pdfUri = FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.provider",
+                                file
+                            )
+
+                            // 🔹 Intent para abrir el PDF
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(pdfUri, "application/pdf")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+
+                            // 🔹 Verificar si hay app que pueda abrir el PDF
+                            if (intent.resolveActivity(context.packageManager) != null) {
+                                context.startActivity(intent)
+                            } else {
+                                Toast.makeText(context, "No hay visor de PDF instalado", Toast.LENGTH_SHORT).show()
+                            }
+
+                        } catch (e: Exception) {
+
+                        }
+                    }
+
+                    Result.success(fileUri)
+                } ?: Result.failure(Exception("Archivo PDF vacío"))
+            } else {
+                Result.failure(Exception("Error en respuesta: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
 
+
+    private fun savePdfFile(context: Context, inputStream: InputStream, filename: String): Uri {
+        val contentValues = ContentValues().apply {
+            put(MediaStore.Downloads.DISPLAY_NAME, filename)
+            put(MediaStore.Downloads.MIME_TYPE, "application/pdf")
+            put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+        }
+
+        val resolver = context.contentResolver
+        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+
+        uri?.let {
+            resolver.openOutputStream(it)?.use { output ->
+                inputStream.copyTo(output)
+            }
+        }
+        return uri ?: Uri.EMPTY
+    }
 
 
 }

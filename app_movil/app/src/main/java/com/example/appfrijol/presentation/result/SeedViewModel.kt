@@ -11,9 +11,11 @@ import com.example.appfrijol.data.repository.SeedRepository
 import com.example.appfrijol.domain.model.Batch
 import com.example.appfrijol.domain.model.Seed
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
 
@@ -22,9 +24,6 @@ class SeedViewModel @Inject constructor(
     private val repository: SeedRepository
 ) : ViewModel() {
 
-    // --------------------------
-    // State
-    // --------------------------
     private val _history = MutableStateFlow<List<Batch>>(emptyList())
     val history: StateFlow<List<Batch>> = _history
 
@@ -43,23 +42,17 @@ class SeedViewModel @Inject constructor(
     fun loadHistory() {
         viewModelScope.launch {
             val result = repository.getBatchHistory()
-            result.onSuccess { _history.value = it }
-                .onFailure { _error.value = it.message }
+            result
+                .onSuccess {
+                _history.value = it
+                _error.value = null
+            }
+                .onFailure {
+                    _error.value = it.message
+                }
         }
     }
 
-    fun compareBatches(ids: List<Int>) {
-        if (ids.size < 2) {
-            _error.value = "Selecciona al menos 2 lotes para comparar"
-            return
-        }
-
-        viewModelScope.launch {
-            val result = repository.compareBatches(ids)
-            result.onSuccess { _comparison.value = it }
-                .onFailure { _error.value = it.message }
-        }
-    }
 
     suspend fun exportBatch(batch: List<Seed>, format: String): Result<ByteArray> {
         if (batch.isEmpty()) return Result.failure(Exception("El lote está vacío"))
@@ -101,5 +94,32 @@ class SeedViewModel @Inject constructor(
         _comparison.value = emptyList()
         _error.value = null
     }
+    fun downloadAllBatchesPdf(context: Context, token: String) {
+        viewModelScope.launch {
+            val result = repository.downloadPdf(context, token)
+            withContext(Dispatchers.Main) {
+                result.onSuccess { uri ->
+                    Toast.makeText(context, "📄 PDF guardado correctamente", Toast.LENGTH_SHORT).show()
+
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(uri, "application/pdf")
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+
+                    if (intent.resolveActivity(context.packageManager) != null) {
+                        context.startActivity(intent)
+                    } else {
+                        Toast.makeText(context, "No hay visor de PDF instalado", Toast.LENGTH_SHORT).show()
+                    }
+                }.onFailure { e ->
+                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+
+
 }
 

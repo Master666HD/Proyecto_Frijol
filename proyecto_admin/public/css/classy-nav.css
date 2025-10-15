@@ -37,18 +37,19 @@ img {
 .classy-nav-container {
   position: relative;
   z-index: 100;
-  background-color: #ffffff;
+  background-color: #000000;
+  width: 100%;
   /* sticky */ }
   .classy-nav-container * {
     box-sizing: border-box; }
-  .classy-nav-container a {
+  .classy-nav-container a { 
     -webkit-transition-duration: 500ms;
     transition-duration: 500ms;
     text-decoration: none;
     outline: none;
     font-size: 14px;
     font-weight: 400;
-    color: #232323;
+    color: #f1f0f0;
     display: inline-block; }
     .classy-nav-container a:hover, .classy-nav-container a:focus {
       -webkit-transition-duration: 500ms;
@@ -65,8 +66,7 @@ img {
     top: 0;
     right: 0;
     left: 0; }
-  .classy-nav-container.box-skins .classynav > ul > li {
-    background-color: #1abc9c; }
+
     .classy-nav-container.box-skins .classynav > ul > li > a {
       color: #fff; }
 
@@ -104,29 +104,16 @@ img {
 .classynav ul li {
   display: inline-block;
   clear: both;
-  position: inherit;
+  position: center;
   z-index: 10; }
-  .classynav ul li.cn-dropdown-item {
-    position: relative;
-    z-index: 10; }
-    .classynav ul li.cn-dropdown-item ul li {
-      position: relative;
-      z-index: 10; }
-  .classynav ul li ul li {
-    display: block; }
-    .classynav ul li ul li a {
-      padding: 0 20px; }
+
   .classynav ul li a {
     padding: 0 12px;
     display: block;
-    height: 35px;
-    font-size: 14px;
+    height: 20px;
+    font-size: 35px;
     line-height: 34px; }
-  .classynav ul li .megamenu li a {
-    padding: 0 12px; }
-  .classynav ul li div.single-mega a {
-    height: auto;
-    line-height: 1; }
+
 
 /* Down Arrow Icon for Megamenu */
 @font-face {
@@ -482,8 +469,7 @@ img {
   right: 20px;
   z-index: 5; }
 .breakpoint-on .classynav ul li.has-down.active > a:after,
-.breakpoint-on .classynav ul li.megamenu-item.active > a:after {
-  color: #2ecc71; }
+
 
 /* Dark Theme CSS */
 .dark.classy-nav-container {

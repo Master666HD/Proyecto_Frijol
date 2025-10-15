@@ -1,17 +1,18 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class DevolucionPrototipo extends Model
+class Reporte extends Model
 {
-    protected $table = 'devoluciones_prototipos';
+    protected $table = 'reportes';
     public $timestamps = false;
 
     protected $fillable = [
         'idOperacion',
-        'fechaDevolucion',
-        'observaciones'
+        'tipo_reporte',
+        'fechaRegistro'
     ];
 
     public function operacion()
@@ -19,3 +20,4 @@ class DevolucionPrototipo extends Model
         return $this->belongsTo(OperacionPrototipo::class, 'idOperacion');
     }
 }
+

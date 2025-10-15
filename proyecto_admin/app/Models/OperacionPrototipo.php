@@ -11,7 +11,7 @@ class OperacionPrototipo extends Model
 
     protected $fillable = [
         'idUsuario', 'idPrototipo', 'tipoOperacion',
-        'precio', 'estado', 'fechaRegistro', 'fechaDevolucion'
+        'precio', 'estado', 'fechaRegistro','fechaActualizacion'
     ];
 
     public function usuario()

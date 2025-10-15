@@ -11,9 +11,10 @@ class Prototipo extends Model
 
     protected $fillable = [
         'nombre',
-        'descripcion',
+        'serial',
         'estado',
         'precio',
+        'observaciones',
         'fechaRegistro'
     ];
 

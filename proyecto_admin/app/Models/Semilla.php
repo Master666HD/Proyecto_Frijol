@@ -11,11 +11,13 @@ class Semilla extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'color',
-        'forma',
-        'peso',
         'idUsuario',
         'idPrototipo',
+        'uid',
+        'color',
+        'tamano',   
+        'peso',
+        'estado',
         'fechaRegistro'
     ];
 

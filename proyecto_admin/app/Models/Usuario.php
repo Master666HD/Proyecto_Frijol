@@ -61,5 +61,18 @@ class Usuario extends Authenticatable
     public function isAdmin() {
         return $this->rol === 'Admin';
     }
+    // Respuesta en inglés
+   public function toEnglishResponse()
+{
+    return [
+        'id'        => $this->idUsuario,   
+        'firstName' => $this->nombres,
+        'lastName'  => $this->apellidos,
+        'email'     => $this->correo,
+        'userName'  => $this->usuario,
+        'role'      => $this->rol,
+    ];
+}
+
 
 }

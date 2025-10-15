@@ -1,21 +1,52 @@
 @extends('menu')
 
 @section('contenido')
-
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="card shadow-lg border-0">
-                    <div class="card-header bg-success text-white text-center py-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h2 class="mb-0">Lista de Agricultores</h2>
-                            <a href="{{ route('usuarios.create') }}" class="btn btn-primary">
+<style>
+    body {
+        background-color: #121212;
+        color: #e0e0e0;
+        font-family: 'Poppins', sans-serif;
+    }
+    h1, h5 {
+        color: #00ff88;
+    }
+    .card {
+        background: rgba(30, 30, 30, 0.9);
+        border: 1px solid #00ff88;
+        border-radius: 10px;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(0, 255, 136, 0.2);
+    }
+    .card-header {
+        background: rgba(0, 255, 136, 0.1);
+        border-bottom: 1px solid #00ff88;
+        font-weight: bold;
+        color: #00ff88;
+    }
+    table {
+        color: #fff;
+    }
+    thead {
+        background-color: rgba(0, 255, 136, 0.2);
+    }
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+    .card h3 {
+        font-size: 2rem;
+        margin-top: 10px;
+    } 
+</style>
+<div class="container mt-4">
+    <div class="card shadow-sm mb-4" style="background-color: #1b1f24; color: #e0e0e0;">
+    <div class="card-header d-flex justify-content-between align-items-center fs-5">
+        Lista de Agricultores
+        <a href="{{ route('usuarios.create') }}" class="btn btn-primary">
                                 <i class="fa fa-user-plus"></i> Nuevo Usuario
                             </a>
-                        </div>
-                    </div>
-                    <div class="card-body bg-light">
-                        <div class="table-responsive">
+    </div>
+    <div>
+        <div class="table-responsive">  
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="table-success">
                                     <tr>
@@ -82,20 +113,30 @@
         </div>
       </div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let formToSubmit = null;
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    formToSubmit = this.closest('form');
-                    const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
-                    modal.show();
-                });
-            });
-            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-                if(formToSubmit) formToSubmit.submit();
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let formToSubmit = null;
+        let modalInstance = null;
+
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                formToSubmit = this.closest('form');
+                modalInstance = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+                modalInstance.show();
             });
         });
-    </script>
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+            if(formToSubmit) formToSubmit.submit();
+            if(modalInstance) modalInstance.hide();
+        });
+
+        document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if(modalInstance) modalInstance.hide();
+            });
+        });
+    });
+</script>
 @endsection

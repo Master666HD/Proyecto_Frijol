@@ -9,7 +9,7 @@ class UserController extends Controller
     
     public function index()
     {
-        $usuarios = Usuario::all();
+        $usuarios = Usuario::where('estado', 1)->where('rol', 'Agricultor')->get();
 
     return view('usuarios.vistaUsuarios', compact('usuarios'));
     }
@@ -34,10 +34,28 @@ class UserController extends Controller
             'apellidos' => 'required|string|max:255',
             'correo' => 'required|email|max:255|unique:usuarios,correo',
             'rol' => 'required|string|max:255',
-            'telefono' => 'nullable|string|max:20',
+            'telefono' => 'required|digits_between:1,20',
             'usuario' => 'required|string|max:255|unique:usuarios,usuario',
-            'contrasenia' => 'required|string|min:8|confirmed', // Aseg
-        ]);
+            'contrasenia' => 'required|string|min:8',
+        ],[
+            'nombres.required' => 'El nombre es obligatorio.',
+            'apellidos.required' => 'El apellido es obligatorio.',
+            'telefono.required' => 'El teléfono es obligatorio.',
+            'telefono.digits' => 'El teléfono debe tener exactamente 8 dígitos.',
+            'telefono.numeric' => 'Deben ser solo números.',
+            'correo.required' => 'El correo es obligatorio.',
+            'correo.email' => 'El correo debe ser válido.',
+            'correo.unique' => 'El correo ya está registrado.',
+            'usuario.required' => 'El nombre de usuario es obligatorio.',
+            'usuario.unique' => 'El nombre de usuario ya está en uso.',
+            'contrasenia.required' => 'La contraseña es obligatoria.',
+            'contrasenia.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'rol.required' => 'El rol es obligatorio.'
+            
+        ]
+    
+    );
+        // Crea el usuario con los datos validados
 
         Usuario::create($validated);
         return redirect()->route('usuarios.index')->with('success', 'Usuario creado exitosamente.');
@@ -72,7 +90,7 @@ class UserController extends Controller
             'apellidos' => 'required|string|max:255',
             'correo' => 'required|email|max:255|unique:usuarios,correo,' . $id,
             'rol' => 'required|string|max:255',
-            'telefono' => 'nullable|string|max:20',
+            'telefono' => 'required|digits_between:1,20',
             'usuario' => 'required|string|max:255|unique:usuarios,usuario,' . $id,
             'contrasenia' => 'nullable|string|min:8|confirmed', //
         ]);
@@ -85,11 +103,13 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        // Eliminar el usuario por ID
-        $usuarios = Usuario::findOrFail($id);
-        $usuarios->delete();
-        return redirect()->route('usuarios.index')->with('success', 'Usuario eliminado exitosamente.');
-    }
+
+public function destroy(string $id)
+{
+    // Cambiar el estado del usuario a 0 (inactivo)
+    $usuario = Usuario::findOrFail($id);
+    $usuario->estado = 0;
+    $usuario->save();
+    return redirect()->route('usuarios.index')->with('success', 'Usuario eliminado exitosamente.');
+}
 }

@@ -3,80 +3,168 @@
 @section('contenido')
     <style>
         body {
-            background-color: #121212;
-            color: #e0e0e0;
+            background-color: #f9fafb;
+            color: #333;
             font-family: 'Poppins', sans-serif;
         }
 
-        h1,
-        h5 {
-            color: #00ff88;
+        h1, h5 {
+            color: #2e7d32; /* Verde agrícola */
         }
 
+        .dashboard-title {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-title h1 {
+            font-weight: 700;
+            color: #2e7d32;
+        }
+
+        .dashboard-title p {
+            color: #666;
+        }
+
+        /* Cards */
         .card {
-            background: rgba(30, 30, 30, 0.9);
-            border: 1px solid #00ff88;
-            border-radius: 10px;
-            color: #fff;
-            box-shadow: 0 4px 10px rgba(0, 255, 136, 0.2);
+            background: #ffffff;
+            border: 1px solid #e0f2f1;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(46, 125, 50, 0.15);
         }
 
         .card-header {
-            background: rgba(0, 255, 136, 0.1);
-            border-bottom: 1px solid #00ff88;
-            font-weight: bold;
-            color: #00ff88;
+            background: linear-gradient(90deg, #66bb6a 0%, #a5d6a7 100%);
+            color: #1b5e20;
+            font-weight: 600;
+            border-radius: 16px 16px 0 0;
         }
 
+        /* KPI Cards */
+        .kpi-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .kpi-card h5 {
+            color: #4e342e;
+            font-weight: 600;
+        }
+
+        .kpi-card h3 {
+            font-size: 2rem;
+            margin-top: 8px;
+            font-weight: 700;
+        }
+
+        .kpi-icon {
+            font-size: 2.5rem;
+            color: #2e7d32;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Table */
         table {
-            color: #fff;
+            color: #333;
+            border-radius: 10px;
+            overflow: hidden;
         }
 
         thead {
-            background-color: rgba(0, 255, 136, 0.2);
+            background-color: #66bb6a; /* Verde medio */
+            color: #fff;
         }
 
         .table-striped tbody tr:nth-of-type(odd) {
-            background-color: rgba(255, 255, 255, 0.05);
+            background-color: #f1f8e9; /* Verde muy claro */
         }
 
-        .card h3 {
-            font-size: 2rem;
-            margin-top: 10px;
+        .table-hover tbody tr:hover {
+            background-color: #c8e6c9 !important;
+            cursor: pointer;
+        }
+
+        .badge {
+            font-size: 0.85rem;
+            padding: 0.4em 0.7em;
+            border-radius: 0.4em;
+        }
+
+        .badge.bg-success {
+            background-color: #43a047 !important;
+        }
+
+        .badge.bg-primary {
+            background-color: #0288d1 !important;
+        }
+
+        .badge.bg-warning {
+            background-color: #fbc02d !important;
+        }
+
+        /* Charts */
+        canvas {
+            max-height: 320px;
+        }
+
+        /* Animación de entrada */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 
-    <div class="container mt-4">
+    <div class="container mt-4 fade-in">
+
+        {{-- Título --}}
+        <div class="dashboard-title">
+            <h1>🌾 Panel de Control Agrícola</h1>
+            <p>Resumen de operaciones, ventas y estado de las máquinas</p>
+        </div>
 
         {{-- KPIs principales --}}
         <div class="row text-center mb-4">
             <div class="col-md-3">
-                <div class="card shadow-sm">
+                <div class="card kpi-card shadow-sm">
                     <div class="card-body">
+                        <div class="kpi-icon">📊</div>
                         <h5>Total Operaciones</h5>
-                        <h3 class="text-light">{{ $totalOperaciones }}</h3>
+                        <h3 class="text-success">{{ $totalOperaciones }}</h3>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card shadow-sm">
+                <div class="card kpi-card shadow-sm">
                     <div class="card-body">
+                        <div class="kpi-icon">🛒</div>
                         <h5>Ventas</h5>
-                        <h3 style="color:#00ff88;">{{ $totalVentas }}</h3>
+                        <h3 style="color:#2e7d32;">{{ $totalVentas }}</h3>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card shadow-sm">
+                <div class="card kpi-card shadow-sm">
                     <div class="card-body">
+                        <div class="kpi-icon">🔁</div>
                         <h5>Alquileres</h5>
-                        <h3 style="color:#00bfff;">{{ $totalAlquileres }}</h3>
+                        <h3 style="color:#0288d1;">{{ $totalAlquileres }}</h3>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card shadow-sm">
+                <div class="card kpi-card shadow-sm">
                     <div class="card-body">
+                        <div class="kpi-icon">💰</div>
                         <h5>Ingresos Totales</h5>
                         <h3 class="text-warning">Bs {{ number_format($ingresosTotales, 2) }}</h3>
                     </div>
@@ -87,40 +175,42 @@
         {{-- Gráficos --}}
         <div class="row">
             <div class="col-md-6">
-                <div class="card shadow-sm mb-4" style="height: 450px;">
-                    <div class="card-header fs-5">Maquinas Ocupadas o Vendidas</div>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header fs-5">🌱 Máquinas Ocupadas o Vendidas</div>
                     <div class="card-body">
                         <canvas id="prototiposChart"></canvas>
                     </div>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="card shadow-sm mb-4" style="height: 450px;">
-                    <div class="card-header fs-5">Operaciones por Mes</div>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header fs-5">📅 Operaciones por Mes</div>
                     <div class="card-body">
                         <canvas id="operacionesChart"></canvas>
                     </div>
                 </div>
             </div>
-            <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <div class="card shadow-sm mb-4" style="height: 450px;">
-                        <div class="card-header fs-5">Distribución de Máquinas (Disponibles)</div>
-                        <div class="card-body">
-                            <canvas id="prototiposDisponiblesChart"></canvas>
-                        </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header fs-5">🚜 Distribución de Máquinas Disponibles</div>
+                    <div class="card-body">
+                        <canvas id="prototiposDisponiblesChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card shadow-sm mb-4" style="background-color: #1b1f24; color: #e0e0e0;">
+        {{-- Tabla --}}
+        <div class="card shadow-sm mb-4">
             <div class="card-header d-flex justify-content-between align-items-center fs-5">
-                Últimas Operaciones
+                🧾 Últimas Operaciones
             </div>
             <div>
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-success">
+                <table class="table table-striped table-hover align-middle mb-0">
+                    <thead>
                         <tr>
                             <th>#</th>
                             <th>Agricultor</th>
@@ -132,7 +222,7 @@
                     </thead>
                     <tbody>
                         @foreach ($ultimasOperaciones as $index => $op)
-                            <tr style="transition: background-color 0.3s ease;">
+                            <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $op->usuario->nombres ?? 'N/A' }}</td>
                                 <td>{{ $op->prototipo->nombre ?? 'N/A' }}</td>
@@ -142,7 +232,7 @@
                                     @elseif($op->tipoOperacion == 'ALQUILER')
                                         <span class="badge bg-primary text-light">Alquiler</span>
                                     @else
-                                        <span class="badge bg-secondary text-light">{{ ucfirst($op->tipoOperacion) }}</span>
+                                        <span class="badge bg-warning text-dark">{{ ucfirst($op->tipoOperacion) }}</span>
                                     @endif
                                 </td>
                                 <td>Bs {{ number_format($op->precio, 2) }}</td>
@@ -154,72 +244,50 @@
             </div>
         </div>
 
-        <style>
-            .table-hover tbody tr:hover {
-                background-color: rgba(40, 167, 69, 0.15) !important;
-                cursor: pointer;
-            }
-
-            .badge {
-                font-size: 0.85rem;
-                padding: 0.4em 0.7em;
-                border-radius: 0.4em;
-            }
-        </style>
-
-
-
     </div>
 
     {{-- Scripts --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // 🎯 Gráfico Prototipos Disponibles
+        // 🍀 Gráfico Prototipos Disponibles
         new Chart(document.getElementById('prototiposDisponiblesChart'), {
             type: 'doughnut',
             data: {
                 labels: ['Para Alquilar', 'Para Vender', 'Mantenimiento'],
                 datasets: [{
                     data: [{{ $prototiposParaAlquilar }}, {{ $prototiposParaVender }}, {{ $prototiposMantenimiento }}],
-                    backgroundColor: ['#1f77b4', '#00ff88', '#ffc107'],
+                    backgroundColor: ['#81c784', '#aed581', '#fbc02d'],
                     borderWidth: 0
                 }]
             },
             options: {
-                cutout: '65%',  // hace la dona más elegante
-                maintainAspectRatio: false,
-                aspectRatio: 1.3,
+                cutout: '65%',
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: '#e6edf3', font: { size: 13 } } }
+                    legend: { position: 'bottom', labels: { color: '#333', font: { size: 13 } } }
                 }
             }
         });
 
-        // 🎯 Gráfico Prototipos Ocupados/Vendidos
+        // 🌾 Gráfico Prototipos Ocupados/Vendidos
         new Chart(document.getElementById('prototiposChart'), {
             type: 'doughnut',
             data: {
                 labels: ['Vendidos', 'Alquilados'],
                 datasets: [{
                     data: [{{ $prototiposVendidos }}, {{ $prototiposAlquilados }}],
-                    backgroundColor: ['#00ff88', '#ff4d4d'],
+                    backgroundColor: ['#43a047', '#4fc3f7'],
                     borderWidth: 0
                 }]
             },
             options: {
                 cutout: '65%',
-                maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: '#e6edf3', font: { size: 13 } }
-                    }
+                    legend: { position: 'bottom', labels: { color: '#333', font: { size: 13 } } }
                 }
             }
         });
 
-
-        // 🎯 Gráfico de Operaciones por Mes
+        // 📊 Gráfico de Operaciones por Mes
         new Chart(document.getElementById('operacionesChart'), {
             type: 'bar',
             data: {
@@ -227,42 +295,34 @@
                 datasets: [
                     {
                         label: 'Ventas',
-                        backgroundColor: '#00ff88',
-                        borderRadius: 6, // bordes redondeados en las barras
+                        backgroundColor: '#66bb6a',
+                        borderRadius: 6,
                         data: {!! json_encode($dataVentas) !!}
                     },
                     {
                         label: 'Alquileres',
-                        backgroundColor: '#1f77b4',
+                        backgroundColor: '#4fc3f7',
                         borderRadius: 6,
                         data: {!! json_encode($dataAlquileres) !!}
                     }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
                 plugins: {
-                    legend: { labels: { color: '#e6edf3', font: { size: 13 } } }
+                    legend: { labels: { color: '#333', font: { size: 13 } } }
                 },
                 scales: {
                     x: {
-                        ticks: { color: '#e6edf3' },
-                        grid: { color: '#333' }
+                        ticks: { color: '#333' },
+                        grid: { color: '#e0e0e0' }
                     },
                     y: {
-                        ticks: {
-                            color: '#e6edf3',
-                            stepSize: 1  // 👈 hace que las unidades sean de 1 en 1
-                        },
-                        grid: { color: '#333' },
+                        ticks: { color: '#333', stepSize: 1 },
+                        grid: { color: '#e0e0e0' },
                         beginAtZero: true
                     }
                 }
             }
         });
-
     </script>
-
-    <br>
 @endsection

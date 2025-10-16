@@ -95,7 +95,7 @@
 
 
     <!-- ##### Footer Area Start ##### -->
-  <footer class="footer-area bg-img" style="background-image: url('{{ asset('img/bg-img/3.jpg') }}');">
+  <footer class="footer-area bg-img" style="background-image: url('{{ asset('img/bg-img/nose2.png') }}');">
         <!-- Main Footer Area -->
         <div class="main-footer-area">
             <div class="container">

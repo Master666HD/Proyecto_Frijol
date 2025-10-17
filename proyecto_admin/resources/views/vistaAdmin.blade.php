@@ -271,9 +271,9 @@
                     <tbody>
                         @foreach ($ultimasOperaciones as $index => $op)
                             <tr>
-                                <td class="fw-bold text-white">{{ $index + 1 }}</td>
-                                <td class="text-white">{{ $op->usuario->nombres ?? 'N/A' }}</td>
-                                <td class="text-white">{{ $op->prototipo->nombre ?? 'N/A' }}</td>
+                                <td class="fw-bold text-black">{{ $index + 1 }}</td>
+                                <td class="text-black">{{ $op->usuario->nombres ?? 'N/A' }}</td>
+                                <td class="text-black">{{ $op->prototipo->nombre ?? 'N/A' }}</td>
                                 <td>
                                     @if($op->tipoOperacion == 'VENTA')
                                         <span class="badge bg-success">
@@ -287,8 +287,8 @@
                                         <span class="badge bg-secondary">{{ ucfirst($op->tipoOperacion) }}</span>
                                     @endif
                                 </td>
-                                <td class="fw-semibold text-white">Bs {{ number_format($op->precio, 2) }}</td>
-                                <td class="text-white">{{ \Carbon\Carbon::parse($op->fechaRegistro)->format('d/m/Y') }}</td>
+                                <td class="fw-semibold text-black">Bs {{ number_format($op->precio, 2) }}</td>
+                                <td class="text-black">{{ \Carbon\Carbon::parse($op->fechaRegistro)->format('d/m/Y') }}</td>
                             </tr>
                         @endforeach
                     </tbody>

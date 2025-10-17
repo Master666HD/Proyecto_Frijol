@@ -22,6 +22,40 @@ class SemillaController extends Controller
 
         return response()->json($semillas);
     }
+    public function obtenerEstado()
+    {
+        // Obtiene la última semilla registrada (la más reciente)
+        $ultimaSemilla = Semilla::latest()->first();
+
+        if ($ultimaSemilla) {
+            return response()->json([
+                'estado' => $ultimaSemilla->estado,
+                'uid' => $ultimaSemilla->uid,
+                'color' => $ultimaSemilla->color,
+                'peso' => $ultimaSemilla->peso,
+                'tamano' => $ultimaSemilla->tamano,
+            ], 200);
+        }
+
+        return response()->json(['estado' => 'SIN_DATOS'], 200);
+    }
+    public function obtenerEstadoPorUID($uid)
+    {
+        $semilla = Semilla::where('uid', $uid)->first();
+
+        if ($semilla) {
+            return response()->json([
+                'estado' => $semilla->estado,
+                'uid' => $semilla->uid,
+                'color' => $semilla->color,
+                'peso' => $semilla->peso,
+                'tamano' => $semilla->tamano,
+            ], 200);
+        }
+
+        return response()->json(['estado' => 'NO_ENCONTRADA'], 404);
+    }
+
 
     public function getAsignacionActiva(Request $request)
     {
@@ -192,16 +226,16 @@ class SemillaController extends Controller
 
             $diff = $lastTime ? $date->diffInMinutes($lastTime, true) : 0;
 
-        if ($lastTime && $diff > $minutesGap) {
-            // Save previous batch
-            $batches[] = [
-                'start' => $currentBatch[0]->fechaRegistro,
-                'end' => end($currentBatch)->fechaRegistro,
-                'seeds' => $currentBatch,
-                'total' => count($currentBatch),
-            ];
-            $currentBatch = [];
-        }
+            if ($lastTime && $diff > $minutesGap) {
+                // Save previous batch
+                $batches[] = [
+                    'start' => $currentBatch[0]->fechaRegistro,
+                    'end' => end($currentBatch)->fechaRegistro,
+                    'seeds' => $currentBatch,
+                    'total' => count($currentBatch),
+                ];
+                $currentBatch = [];
+            }
 
             $currentBatch[] = $seed;
             $lastTime = $date;
@@ -216,45 +250,45 @@ class SemillaController extends Controller
             ];
         }
 
-    // Map output to English keys
-    $batches = array_map(function ($batch) {
-        return [
-            'start' => $batch['start'],
-            'end' => $batch['end'],
-            'total' => $batch['total'],
-            'seeds' => array_map(function ($seed) {
-                return [
-                    'id' => $seed->id,
-                    'color' => $seed->color,
-                    'size' => $seed->tamano,
-                    'weight' => $seed->peso,
-                    'status' => $seed->estado,
-                    'registration_date' => $seed->fechaRegistro
-                ];
-            }, $batch['seeds'])
-        ];
-    }, $batches);
+        // Map output to English keys
+        $batches = array_map(function ($batch) {
+            return [
+                'start' => $batch['start'],
+                'end' => $batch['end'],
+                'total' => $batch['total'],
+                'seeds' => array_map(function ($seed) {
+                    return [
+                        'id' => $seed->id,
+                        'color' => $seed->color,
+                        'size' => $seed->tamano,
+                        'weight' => $seed->peso,
+                        'status' => $seed->estado,
+                        'registration_date' => $seed->fechaRegistro
+                    ];
+                }, $batch['seeds'])
+            ];
+        }, $batches);
 
         return response()->json($batches, 200);
     }
 
-// Similar changes para obtenerDetalleLote y compararLotes
-public function getBatchDetail($id, Request $request)
-{
-    $seed = Semilla::where('idUsuario', $request->user()->id)
-        ->where('id', $id)
-        ->firstOrFail();
+    // Similar changes para obtenerDetalleLote y compararLotes
+    public function getBatchDetail($id, Request $request)
+    {
+        $seed = Semilla::where('idUsuario', $request->user()->id)
+            ->where('id', $id)
+            ->firstOrFail();
 
-    // Map to English keys
-    return response()->json([
-        'id' => $seed->id,
-        'color' => $seed->color,
-        'size' => $seed->tamano,
-        'weight' => $seed->peso,
-        'status' => $seed->estado,
-        'registration_date' => $seed->fechaRegistro
-    ], 200);
-}
+        // Map to English keys
+        return response()->json([
+            'id' => $seed->id,
+            'color' => $seed->color,
+            'size' => $seed->tamano,
+            'weight' => $seed->peso,
+            'status' => $seed->estado,
+            'registration_date' => $seed->fechaRegistro
+        ], 200);
+    }
 
     public function compareBatches(Request $request)
     {
@@ -267,17 +301,17 @@ public function getBatchDetail($id, Request $request)
             ->where('idUsuario', $request->user()->id)
             ->get();
 
-    // Map to English
-    $seeds = $seeds->map(function ($seed) {
-        return [
-            'id' => $seed->id,
-            'color' => $seed->color,
-            'size' => $seed->tamano,
-            'weight' => $seed->peso,
-            'status' => $seed->estado,
-            'registration_date' => $seed->fechaRegistro
-        ];
-    });
+        // Map to English
+        $seeds = $seeds->map(function ($seed) {
+            return [
+                'id' => $seed->id,
+                'color' => $seed->color,
+                'size' => $seed->tamano,
+                'weight' => $seed->peso,
+                'status' => $seed->estado,
+                'registration_date' => $seed->fechaRegistro
+            ];
+        });
 
         return response()->json($seeds, 200);
     }
@@ -290,21 +324,21 @@ public function getBatchDetail($id, Request $request)
             return response()->json(['error' => 'Missing start or end parameters'], 400);
         }
 
-    // Get all seeds of the user in the given range
-    $batch = Semilla::where('idUsuario', $request->user()->id)
-        ->whereBetween('fechaRegistro', [$start, $end])
-        ->get();
+        // Get all seeds of the user in the given range
+        $batch = Semilla::where('idUsuario', $request->user()->id)
+            ->whereBetween('fechaRegistro', [$start, $end])
+            ->get();
 
         if ($batch->isEmpty()) {
             return response()->json(['error' => 'No seeds found in this range'], 404);
         }
 
-    // --- CSV export ---
-    if ($format === 'csv') {
-        $csv = "Color,Size,Weight,Status,Registration Date\n";
-        foreach ($batch as $seed) {
-            $csv .= "{$seed->color},{$seed->tamano},{$seed->peso},{$seed->estado},{$seed->fechaRegistro}\n";
-        }
+        // --- CSV export ---
+        if ($format === 'csv') {
+            $csv = "Color,Size,Weight,Status,Registration Date\n";
+            foreach ($batch as $seed) {
+                $csv .= "{$seed->color},{$seed->tamano},{$seed->peso},{$seed->estado},{$seed->fechaRegistro}\n";
+            }
 
             return response($csv, 200, [
                 'Content-Type' => 'text/csv',
@@ -312,23 +346,23 @@ public function getBatchDetail($id, Request $request)
             ]);
         }
 
-    // --- PDF export ---
-    if ($format === 'pdf') {
-        // Map seeds to English keys
-        $batchMapped = $batch->map(function($seed) {
-            return [
-                'color' => $seed->color,
-                'size' => $seed->tamano,
-                'weight' => $seed->peso,
-                'status' => $seed->estado,
-                'registration_date' => $seed->fechaRegistro
-            ];
-        });
+        // --- PDF export ---
+        if ($format === 'pdf') {
+            // Map seeds to English keys
+            $batchMapped = $batch->map(function ($seed) {
+                return [
+                    'color' => $seed->color,
+                    'size' => $seed->tamano,
+                    'weight' => $seed->peso,
+                    'status' => $seed->estado,
+                    'registration_date' => $seed->fechaRegistro
+                ];
+            });
 
-        // Ensure the view exists and pass the mapped data
-        if (!view()->exists('exports.batch')) {
-            return response()->json(['error' => 'PDF view not found'], 500);
-        }
+            // Ensure the view exists and pass the mapped data
+            if (!view()->exists('exports.batch')) {
+                return response()->json(['error' => 'PDF view not found'], 500);
+            }
 
             $pdf = Pdf::loadView('exports.batch', ['batch' => $batchMapped]);
             return $pdf->download("batch_{$start}_{$end}.pdf");

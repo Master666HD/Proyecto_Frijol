@@ -34,6 +34,11 @@ Route::get('/semillas', [SemillaController::class, 'obtenerPorUsuario']);
 Route::get('/resumen_clasificacion', [ClasificacionController::class, 'getResumenClasificacion']);
 Route::get('/semillas/asignacion', [SemillaController::class, 'getAsignacionActiva']);
 Route::post('/semillas', [SemillaController::class, 'store']);
+
+Route::get('/semillas/estado/{uid}', [SemillaController::class, 'obtenerEstadoPorUID']);
+
+Route::get('/semillas/estado', [SemillaController::class, 'obtenerEstado']);
+
 Route::get('/classification/summary', [ClasificacionController::class, 'getResumenClasificacion']);
 
 Route::middleware('auth:sanctum')->group(function () {

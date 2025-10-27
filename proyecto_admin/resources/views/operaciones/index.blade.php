@@ -286,6 +286,13 @@
                                         <i class="fa fa-edit"></i>
                                     </a>
 
+                                    <!-- Botón para generar/descargar recibo (venta o alquiler) -->
+                                    <a href="{{ route('operaciones.recibo', $op->id) }}" 
+                                       class="btn btn-sm btn-info me-2" 
+                                       title="Generar Recibo" target="_blank">
+                                        <i class="fa-solid fa-file-pdf"></i>
+                                    </a>
+
                                     {{-- Si es alquiler activo, mostrar botón de devolución --}}
                                     @if($op->tipoOperacion == 'ALQUILER' && $op->estado == 'ACTIVO')
                                         <a href="{{ route('operaciones.devolucion.form', $op->id) }}" 

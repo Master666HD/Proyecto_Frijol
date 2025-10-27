@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\OperacionPrototipo;
 use App\Models\Prototipo;
+use App\Models\Reporte;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Usuario;
 use App\Models\DevolucionPrototipo;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class OperacionPrototipoController extends Controller
 {
@@ -76,7 +79,7 @@ class OperacionPrototipoController extends Controller
             ->where('tipoOperacion', 'ALQUILER')
             ->where('estado', 'ACTIVO')
             ->firstOrFail();
-        $devolucion = DevolucionPrototipo::where('idOperacion', $id) -> where('fechaDevolucion', '!=', null)->first();
+        $devolucion = DevolucionPrototipo::where('idOperacion', $id)->where('fechaDevolucion', '!=', null)->first();
 
         return view('operaciones.devolucion', compact('operacion', 'devolucion'));
     }
@@ -139,57 +142,57 @@ class OperacionPrototipoController extends Controller
     }
 
 
-   public function update(Request $request, $id)
-{
-    $operacion = OperacionPrototipo::findOrFail($id);
+    public function update(Request $request, $id)
+    {
+        $operacion = OperacionPrototipo::findOrFail($id);
 
-    $request->validate([
-        'idPrototipo' => 'required|exists:prototipos,id',
-        'estado' => 'required|in:ACTIVO,FINALIZADO,ANULADO',
-        'precio' => 'required|numeric',
-        'idUsuario' => 'required|exists:usuarios,id'
-    ]);
-
-    DB::beginTransaction();
-    try {
-        // Si se cambió el prototipo
-        if ($operacion->idPrototipo != $request->idPrototipo) {
-            $prototipoAnterior = Prototipo::find($operacion->idPrototipo);
-            if ($prototipoAnterior) {
-                // liberar el anterior
-                if ($operacion->tipoOperacion === 'VENTA') {
-                    $prototipoAnterior->estado = 2; // disponible para venta
-                } else {
-                    $prototipoAnterior->estado = 1; // disponible para alquiler
-                }
-                $prototipoAnterior->save();
-            }
-        }
-
-        // Actualizar operación
-        $operacion->update([
-            'idUsuario' => $request->idUsuario,
-            'idPrototipo' => $request->idPrototipo,
-            'precio' => $request->precio,
-            'estado' => $request->estado,
+        $request->validate([
+            'idPrototipo' => 'required|exists:prototipos,id',
+            'estado' => 'required|in:ACTIVO,FINALIZADO,ANULADO',
+            'precio' => 'required|numeric',
+            'idUsuario' => 'required|exists:usuarios,id'
         ]);
 
-        // Cambiar estado del nuevo prototipo
-        $prototipoNuevo = Prototipo::findOrFail($request->idPrototipo);
-        if ($operacion->tipoOperacion === 'VENTA') {
-            $prototipoNuevo->estado = 4; // vendido
-        } else {
-            $prototipoNuevo->estado = 5; // alquilado
-        }
-        $prototipoNuevo->save();
+        DB::beginTransaction();
+        try {
+            // Si se cambió el prototipo
+            if ($operacion->idPrototipo != $request->idPrototipo) {
+                $prototipoAnterior = Prototipo::find($operacion->idPrototipo);
+                if ($prototipoAnterior) {
+                    // liberar el anterior
+                    if ($operacion->tipoOperacion === 'VENTA') {
+                        $prototipoAnterior->estado = 2; // disponible para venta
+                    } else {
+                        $prototipoAnterior->estado = 1; // disponible para alquiler
+                    }
+                    $prototipoAnterior->save();
+                }
+            }
 
-        DB::commit();
-        return redirect()->route('operaciones.index')->with('success', 'Operación actualizada correctamente.');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return back()->with('error', 'Error al actualizar: ' . $e->getMessage());
+            // Actualizar operación
+            $operacion->update([
+                'idUsuario' => $request->idUsuario,
+                'idPrototipo' => $request->idPrototipo,
+                'precio' => $request->precio,
+                'estado' => $request->estado,
+            ]);
+
+            // Cambiar estado del nuevo prototipo
+            $prototipoNuevo = Prototipo::findOrFail($request->idPrototipo);
+            if ($operacion->tipoOperacion === 'VENTA') {
+                $prototipoNuevo->estado = 4; // vendido
+            } else {
+                $prototipoNuevo->estado = 5; // alquilado
+            }
+            $prototipoNuevo->save();
+
+            DB::commit();
+            return redirect()->route('operaciones.index')->with('success', 'Operación actualizada correctamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error al actualizar: ' . $e->getMessage());
+        }
     }
-}
 
 
     public function destroy($id)
@@ -219,4 +222,69 @@ class OperacionPrototipoController extends Controller
         }
     }
 
+    public function generarRecibo($id)
+    {
+        $oper = OperacionPrototipo::with(['usuario', 'prototipo'])->findOrFail($id);
+
+        // Delegar a método específico según tipo
+        $tipo = strtoupper($oper->tipoOperacion ?? '');
+        if ($tipo === 'ALQUILER') {
+            return $this->generarReciboAlquiler($id);
+        }
+        return $this->generarReciboVenta($id);
+    }
+
+    /**
+     * Generar recibo específico para ALQUILER
+     */
+    public function generarReciboAlquiler($id)
+    {
+        $oper = OperacionPrototipo::with(['usuario', 'prototipo','devolucion'])->findOrFail($id);
+
+        // Cálculos para alquiler: si existen fechas en la operación
+        $monto = $oper->precio;
+       
+        if (!empty($oper->fechaRegistro) && !empty($oper->devolucion->fechaDevolucion)) {
+            // Solo la fecha (sin hora) en formato día/mes/año
+            $inicio = Carbon::parse($oper->fechaRegistro)->setTimezone('America/La_Paz')->format('d/m/Y');
+            $fin = Carbon::parse($oper->devolucion->fechaDevolucion)->setTimezone('America/La_Paz')->format('d/m/Y');
+        }
+
+
+        $data = compact('oper','monto','inicio','fin');
+
+        // Registrar en tabla reportes
+        Reporte::create([
+            'idOperacion' => $oper->id,
+            'tipo_reporte' => 'RECIBO_ALQUILER',
+            'fechaRegistro' => now()->toDateTimeString()
+        ]);
+
+        $pdf = Pdf::loadView('recibos.recibo_alquiler', $data)->setPaper('a4', 'portrait');
+        $fileName = 'recibo_' . $oper->id . '_alquiler.pdf';
+        return $pdf->download($fileName);
+    }
+
+    /**
+     * Generar recibo específico para VENTA
+     */
+    public function generarReciboVenta($id)
+    {
+        $oper = OperacionPrototipo::with(['usuario', 'prototipo'])->findOrFail($id);
+
+        // Para venta el monto suele ser el precio registrado
+        $monto = $oper->precio;
+        $data = compact('oper', 'monto');
+
+        // Registrar en tabla reportes
+        Reporte::create([
+            'idOperacion' => $oper->id,
+            'tipo_reporte' => 'RECIBO_VENTA',
+            'fechaRegistro' => now()->toDateTimeString()
+        ]);
+
+        $pdf = Pdf::loadView('recibos.recibo_venta', $data)->setPaper('a4', 'portrait');
+        $fileName = 'recibo_' . $oper->id . '_venta.pdf';
+        return $pdf->download($fileName);
+    }
 }

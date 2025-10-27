@@ -23,4 +23,8 @@ class OperacionPrototipo extends Model
     {
         return $this->belongsTo(Prototipo::class, 'idPrototipo');
     }
+    public function devolucion()
+    {
+        return $this->hasOne(DevolucionPrototipo::class, 'idOperacion');
+    }
 }

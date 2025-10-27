@@ -4,12 +4,51 @@
     <meta charset="utf-8">
     <title>Resumen de Lotes</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; margin: 25px; color: #222; }
-        h1 { text-align: center; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #999; padding: 8px; text-align: center; }
-        th { background: #f0f0f0; font-weight: bold; }
-        tr:nth-child(even) { background: #f9f9f9; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2E7D32;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f3f3f3;
+        }
+
+        tr:hover {
+            background-color: #e0f2f1;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -39,5 +78,10 @@
             @endforeach
         </tbody>
     </table>
+
+    <div class="footer">
+        Reporte generado automáticamente. <br>
+        Total de lotes: {{ count($summary) }}
+    </div>
 </body>
 </html>

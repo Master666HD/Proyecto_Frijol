@@ -17,6 +17,9 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
     Route::resource('operaciones', OperacionPrototipoController::class);
     Route::get('/operaciones/{id}/devolucion', [OperacionPrototipoController::class, 'formDevolucion'])->name('operaciones.devolucion.form');
     Route::post('/operaciones/{id}/devolucion', [OperacionPrototipoController::class, 'registrarDevolucion'])->name('operacion.devolucion.store');
+    Route::delete('/operaciones/{id}/destroy-with-prototipo', [OperacionPrototipoController::class, 'destroyWithPrototipo'])
+    ->name('operaciones.destroy_with_prototipo');
+
     
     
     Route::post('prototipos/store-multiple', [PrototipoController::class, 'storeMultiple'])->name('prototipos.storeMultiple');

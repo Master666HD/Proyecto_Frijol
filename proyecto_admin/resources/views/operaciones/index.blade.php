@@ -242,7 +242,7 @@
                             <th scope="col">USUARIO</th>
                             <th scope="col">PROTOTIPO</th>
                             <th scope="col">TIPO</th>
-                            <th scope="col">PRECIO</th>
+                            <th scope="col">GANANCIA</th>
                             <th scope="col">FECHA</th>
                             <th scope="col">ESTADO</th>
                             <th scope="col" class="text-center">ACCIONES</th>
@@ -301,6 +301,7 @@
                                             <i class="fa fa-undo"></i>
                                         </a>
                                     @endif
+                                    
 
                                     <form action="{{ route('operaciones.destroy', $op->id) }}" 
                                           method="POST" style="display:inline-block;" 
@@ -308,12 +309,27 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="button" 
-                                                class="btn btn-sm btn-danger delete-btn" 
+                                                class="btn btn-sm btn-danger delete-btn me-2" 
                                                 data-id="{{ $op->id }}" 
                                                 title="Eliminar">
-                                            <i class="fa fa-trash"></i>
+                                            <i class="fa fa-times"></i>
                                         </button>
                                     </form>
+                                    {{-- Nuevo botón: eliminar operación y prototipo solo si ALQUILER y FINALIZADO --}}
+                                     @if($op->tipoOperacion == 'ALQUILER' && $op->estado == 'FINALIZADO')
+                                            <form action="{{ route('operaciones.destroy_with_prototipo', $op->id) }}" 
+                                                method="POST" style="display:inline-block;" 
+                                                class="delete-form">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" 
+                                                        class="btn btn-sm btn-danger" 
+                                                        title="Eliminar operación y prototipo"
+                                                        onclick="return confirm('¿Estás seguro de eliminar la operación y el prototipo?');">
+                                                    <i class="fa fa-trash "></i>
+                                                </button>
+                                            </form>
+                                     @endif
                                 </td>
                             </tr>
                         @endforeach

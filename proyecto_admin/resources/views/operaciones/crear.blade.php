@@ -331,19 +331,46 @@
             }
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            filtrarPrototipos();
-            // Mostrar/ocultar campos según el valor inicial
-            if (tipoOperacion.value === 'ALQUILER') {
-                fechaDevolucionField.style.display = 'block';
-                observacionesField.style.display = 'block';
-                inputFechaDevolucion.setAttribute('required', true);
-            } else {
-                fechaDevolucionField.style.display = 'none';
-                observacionesField.style.display = 'none';
-                inputFechaDevolucion.removeAttribute('required');
-            }
-        });
+       document.addEventListener('DOMContentLoaded', () => {
+    filtrarPrototipos();
+
+    // Obtener elementos
+    const fechaDevolucionField = document.getElementById('fechaDevolucionField');
+    const inputFechaDevolucion = document.getElementById('inputFechaDevolucion');
+    const observacionesField = document.getElementById('observacionesField');
+    const tipoOperacion = document.getElementById('tipoOperacion');
+
+    // Configurar fecha mínima hoy
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayString = `${year}-${month}-${day}`;
+    inputFechaDevolucion.min = todayString;
+
+    // Mostrar/ocultar campos según el valor inicial
+    if (tipoOperacion.value === 'ALQUILER') {
+        fechaDevolucionField.style.display = 'block';
+        observacionesField.style.display = 'block';
+        inputFechaDevolucion.setAttribute('required', true);
+    } else {
+        fechaDevolucionField.style.display = 'none';
+        observacionesField.style.display = 'none';
+        inputFechaDevolucion.removeAttribute('required');
+    }
+    tipoOperacion.addEventListener('change', () => {
+        if (tipoOperacion.value === 'ALQUILER') {
+            fechaDevolucionField.style.display = 'block';
+            observacionesField.style.display = 'block';
+            inputFechaDevolucion.setAttribute('required', true);
+        } else {
+            fechaDevolucionField.style.display = 'none';
+            observacionesField.style.display = 'none';
+            inputFechaDevolucion.removeAttribute('required');
+        }
+    });
+});
+
     </script>
 </body>
 

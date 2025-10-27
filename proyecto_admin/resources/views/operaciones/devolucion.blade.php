@@ -23,7 +23,6 @@
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
 </style>
-
 <body>
     <div class="container">
         <div class="card shadow p-4 mt-5">
@@ -39,14 +38,19 @@
                 {{ \Carbon\Carbon::parse($operacion->fechaRegistro)->format('d/m/Y') }}
             </p>
 
+            {{-- 🔹 Campos nuevos --}}
+            <hr>
+            <p><strong>Precio del prototipo:</strong> Bs {{ number_format($operacion->prototipo->precio, 2) }}</p>
+            <p><strong>Ganancia (3%):</strong>
+                Bs {{ number_format($operacion->prototipo->precio * 0.03, 2) }}
+            </p>
+            <p><strong>Monto a devolver:</strong>
+                Bs {{ number_format($operacion->prototipo->precio - ($operacion->prototipo->precio * 0.03), 2) }}
+            </p>
+            <hr>
 
             <form action="{{ route('operaciones.devolucion.form', $operacion->id) }}" method="POST">
                 @csrf
-                <div class="mb-3">
-                    <p><strong>Fecha de devolución real:</strong></p>
-                    <input type="date" name="fechaDevolucion" class="form-control" required
-                        value="{{ $devolucion->fechaDevolucion ?? '' }}">
-                </div>
                 <div class="mb-3">
                     <p><strong>Mandar:</strong></p>
                     <select name="estadoPrototipo" class="form-select" required>
@@ -55,19 +59,18 @@
                         <option value="3">Mantenimiento</option>
                     </select>
                 </div>
+
                 <div class="mb-3">
                     <label class="form-label">Observaciones:</label>
-                    <textarea name="observaciones" class="form-control"
-                        rows="3">{{ $devolucion->observaciones ?? '' }}</textarea>
+                    <textarea name="observaciones" class="form-control" rows="3">{{ $devolucion->observaciones ?? '' }}</textarea>
                 </div>
+
                 <div class="d-grid">
                     <button type="submit" class="btn btn-primary">Registrar devolución</button>
                     <a href="{{ route('operaciones.index') }}" class="btn btn-secondary mt-2">Cancelar</a>
                 </div>
-
             </form>
         </div>
     </div>
 </body>
-
 </html>

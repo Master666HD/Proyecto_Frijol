@@ -87,7 +87,6 @@ class OperacionPrototipoController extends Controller
     public function registrarDevolucion(Request $request, $id)
     {
         $request->validate([
-            'fechaDevolucion' => 'required|date',
             'observaciones' => 'nullable|string',
             'estadoPrototipo' => 'required|in:1,2,3',
         ]);
@@ -96,27 +95,33 @@ class OperacionPrototipoController extends Controller
         try {
             $devolucion = DevolucionPrototipo::where('idOperacion', $id)->firstOrFail();
 
-            $devolucion->update([
-                'fechaDevolucion' => $request->fechaDevolucion,
-                'observaciones' => $request->observaciones,
-            ]);
-
             $operacion = OperacionPrototipo::findOrFail($id);
-            $operacion->update([
-                'estado' => 'FINALIZADO'
+            $prototipo = Prototipo::findOrFail($operacion->idPrototipo);
+
+            // 🔹 Calcular ganancia (5% del precio original)
+            $ganancia = $prototipo->precio * 0.05;
+
+            // 🔹 Actualizar el precio de la operación a la ganancia
+            $operacion->update(['precio' => $ganancia]);
+
+            // 🔹 Actualizar la devolución y estado del prototipo
+            $devolucion->update([
+                'observaciones' => $request->observaciones
             ]);
 
-            $prototipo = Prototipo::findOrFail($operacion->idPrototipo);
-            $prototipo->estado = $request->estadoPrototipo;
-            $prototipo->save();
+            $operacion->update(['estado' => 'FINALIZADO']);
+            $prototipo->update(['estado' => $request->estadoPrototipo]);
 
             DB::commit();
-            return redirect()->route('operaciones.index')->with('success', 'Devolución actualizada correctamente.');
+
+            return redirect()->route('operaciones.index')
+                ->with('success', 'Devolución registrada correctamente, precio actualizado a ganancia.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Error al actualizar la devolución: ' . $e->getMessage());
+            return back()->with('error', 'Error al registrar la devolución: ' . $e->getMessage());
         }
     }
+
     public function show(string $id)
     {
 
@@ -212,6 +217,7 @@ class OperacionPrototipoController extends Controller
                 } elseif ($operacion->tipoOperacion === 'ALQUILER') {
                     $prototipo->estado = 1;
                 }
+                
 
                 $prototipo->save();
             }
@@ -221,6 +227,32 @@ class OperacionPrototipoController extends Controller
             return back()->with('error', 'Error al anular la operación: ' . $e->getMessage());
         }
     }
+   public function destroyWithPrototipo($id)
+{
+    try {
+        $operacion = OperacionPrototipo::findOrFail($id);
+
+        // Validar que sea alquiler finalizado
+        if ($operacion->tipoOperacion !== 'ALQUILER' || $operacion->estado !== 'FINALIZADO') {
+            return back()->with('error', 'Solo se pueden anular alquileres finalizados con esta acción.');
+        }
+
+        $prototipo = Prototipo::findOrFail($operacion->idPrototipo);
+
+        // Cambiar estados en lugar de eliminar
+        $operacion->estado = 'ANULADO';
+        $operacion->save();
+
+        $prototipo->estado = 6; // o el estado que corresponda a "liberado"
+        $prototipo->save();
+
+        return redirect()->route('operaciones.index')->with('success', 'Operación y prototipo anulados correctamente.');
+    } catch (\Exception $e) {
+        return back()->with('error', 'Error al anular: ' . $e->getMessage());
+    }
+}
+
+
 
     public function generarRecibo($id)
     {

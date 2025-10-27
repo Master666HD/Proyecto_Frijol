@@ -11,7 +11,9 @@ class DevolucionPrototipo extends Model
     protected $fillable = [
         'idOperacion',
         'fechaDevolucion',
-        'observaciones'
+        'observaciones',
+        'ganancia',          
+        'monto_devolver',
     ];
 
     public function operacion()

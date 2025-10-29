@@ -54,7 +54,7 @@ fun LoginFlowHandler(
                 sessionViewModel.login(
                     token = user.token,
                     userName = user.firstName ?: user.userName ?: "",
-                    userId = user.id ?: ""   // 👈 agrega el id aquí
+                    userId = user.id ?: ""
                 )
                 showLogin = false
                 navController.navigate(Screen.Home.route) {

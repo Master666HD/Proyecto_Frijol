@@ -67,14 +67,7 @@ fun LearningScreen() {
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        // Título principal
-        Text(
-            text = "Academia del Frijol",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
+        
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -297,61 +290,6 @@ fun LearningScreen() {
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Sección: Control de Calidad
-        var expandedCalidad by remember { mutableStateOf(false) }
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expandedCalidad = !expandedCalidad },
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Assessment,
-                            contentDescription = "Calidad",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            "Estándares de Calidad",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                    Icon(
-                        imageVector = if (expandedCalidad) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = "Expandir",
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                }
-
-                if (expandedCalidad) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        QualityStandard("Premium", "Granos enteros, uniformes, sin defectos")
-                        QualityStandard("Estándar", "Ligeras variaciones de tamaño/color")
-                        QualityStandard("Industrial", "Granos partidos para procesamiento")
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "Mejor clasificación = Mayor precio de mercado",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-        }
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -378,7 +316,7 @@ fun LearningScreen() {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Cada grano bien cosechado y clasificado representa mayor calidad y mejor precio en el mercado",
+                    text = "Cada grano bien cosechado y clasificado representa mayor calidad",
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)

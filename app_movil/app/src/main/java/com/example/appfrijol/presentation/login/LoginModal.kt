@@ -27,7 +27,7 @@ fun LoginModal(
     sheetState: SheetState,
     loginViewModel: LoginViewModel,
     onDismiss: () -> Unit,
-    onLoginSuccess: (UserInfo) -> Unit   // <- agregar este parámetro
+    onLoginSuccess: (UserInfo) -> Unit
 ) {
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -52,10 +52,10 @@ fun LoginModal(
             LoginScreen(
                 onLoginSuccess = { user ->
                     onDismiss()
-                    onLoginSuccess(user)   // <- llama al callback pasado
+                    onLoginSuccess(user)
                     Toast.makeText(
                         context,
-                        "¡Bienvenido ${user.firstName}!",
+                        "¡Bienvenido ${user.userName}!",
                         Toast.LENGTH_SHORT
                     ).show()
                     navController.navigate(Screen.Home.route) {
